@@ -5,13 +5,13 @@
 !include "FileFunc.nsh"
 
 !ifndef INFO_PROJECTNAME
-    !define INFO_PROJECTNAME "Elappma"
+    !define INFO_PROJECTNAME "Lieferling"
 !endif
 !ifndef INFO_COMPANYNAME
     !define INFO_COMPANYNAME "Zuri Nimca Klaschka"
 !endif
 !ifndef INFO_PRODUCTNAME
-    !define INFO_PRODUCTNAME "Elappma"
+    !define INFO_PRODUCTNAME "Lieferling"
 !endif
 !ifndef INFO_PRODUCTVERSION
     !define INFO_PRODUCTVERSION "0.0.1"
@@ -255,12 +255,16 @@ RequestExecutionLevel "${REQUEST_EXECUTION_LEVEL}"
 !macro wails.associateCustomProtocols
     ; Create custom protocols associations
     
-      !insertmacro CUSTOM_PROTOCOL_ASSOCIATE "elappma" "Elappma deep link" "$INSTDIR\${PRODUCT_EXECUTABLE},0" "$INSTDIR\${PRODUCT_EXECUTABLE} $\"%1$\""
+      !insertmacro CUSTOM_PROTOCOL_ASSOCIATE "lieferling" "Lieferling deep link" "$INSTDIR\${PRODUCT_EXECUTABLE},0" "$INSTDIR\${PRODUCT_EXECUTABLE} $\"%1$\""
+    
+      !insertmacro CUSTOM_PROTOCOL_ASSOCIATE "elappma" "Deep link from when Lieferling was called Elappma" "$INSTDIR\${PRODUCT_EXECUTABLE},0" "$INSTDIR\${PRODUCT_EXECUTABLE} $\"%1$\""
     
 !macroend
 
 !macro wails.unassociateCustomProtocols
     ; Delete app custom protocol associations
+    
+      !insertmacro CUSTOM_PROTOCOL_UNASSOCIATE "lieferling"
     
       !insertmacro CUSTOM_PROTOCOL_UNASSOCIATE "elappma"
     

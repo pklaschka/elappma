@@ -1,4 +1,4 @@
-module github.com/pklaschka/elappma
+module github.com/pklaschka/lieferling
 
 go 1.26.0
 

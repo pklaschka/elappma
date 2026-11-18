@@ -3,7 +3,7 @@ package pick
 import (
 	"testing"
 
-	"github.com/pklaschka/elappma/internal/github"
+	"github.com/pklaschka/lieferling/internal/github"
 )
 
 func assets(names ...string) []github.Asset {

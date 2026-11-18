@@ -1,5 +1,5 @@
 ---
-name: Elappma
+name: Lieferling
 description: A dispatch list for your own desktop apps, set like a parcel label.
 colors:
   kraft: "light-dark(oklch(70% 0.075 68), oklch(37% 0.05 60))"
@@ -67,7 +67,7 @@ components:
     rounded: "{rounded.control}"
 ---
 
-# Elappma design system
+# Lieferling design system
 
 ## Overview
 

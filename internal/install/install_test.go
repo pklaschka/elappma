@@ -8,7 +8,7 @@ import (
 
 func TestSamePath(t *testing.T) {
 	dir := t.TempDir()
-	app := filepath.Join(dir, "Elappma.app")
+	app := filepath.Join(dir, "Lieferling.app")
 	if err := os.Mkdir(app, 0o755); err != nil {
 		t.Fatal(err)
 	}

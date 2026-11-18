@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/pklaschka/elappma/internal/github"
+	"github.com/pklaschka/lieferling/internal/github"
 )
 
 // Channels.

@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=Elappma
+Name=Lieferling
 Comment=Installs and updates apps from GitHub releases
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/Elappma %u
+Exec=/usr/local/bin/Lieferling %u
 Terminal=false
 Type=Application
-Icon=Elappma
+Icon=Lieferling
 Categories=Utility;
-StartupWMClass=Elappma
+StartupWMClass=Lieferling
 
-MimeType=x-scheme-handler/elappma; 
+MimeType=x-scheme-handler/lieferling;x-scheme-handler/elappma; 

@@ -5,7 +5,7 @@ primary_target: "frontend/index.html"
 related_targets: []
 ---
 
-# Surface: Elappma main window
+# Surface: Lieferling main window
 
 Scope: the app window (list, add, install/update, remove). Mode: Operate.
 Audience and job: one person, a few Macs; see which builds are new, install them in one click.

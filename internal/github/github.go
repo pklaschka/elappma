@@ -143,8 +143,9 @@ func (p *progressReader) Read(b []byte) (int, error) {
 }
 
 // Token finds a GitHub token: GH_TOKEN or GITHUB_TOKEN, then the GitHub CLI's
-// login (gh auth token), then, on macOS, the Keychain item "Elappma GitHub"
-// (security add-generic-password -s "Elappma GitHub" -a github -w <token>).
+// login (gh auth token), then, on macOS, the Keychain item "Lieferling GitHub"
+// (security add-generic-password -s "Lieferling GitHub" -a github -w <token>)
+// or the one from when Lieferling was called Elappma.
 // It returns "" when there is none; public repositories still work then.
 func Token() string {
 	for _, k := range []string{"GH_TOKEN", "GITHUB_TOKEN"} {
@@ -156,7 +157,11 @@ func Token() string {
 		return t
 	}
 	if runtime.GOOS == "darwin" {
-		return commandOutput("security", "find-generic-password", "-s", "Elappma GitHub", "-w")
+		for _, item := range []string{"Lieferling GitHub", "Elappma GitHub"} {
+			if t := commandOutput("security", "find-generic-password", "-s", item, "-w"); t != "" {
+				return t
+			}
+		}
 	}
 	return ""
 }

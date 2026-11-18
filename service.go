@@ -8,10 +8,10 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
-	"github.com/pklaschka/elappma/internal/deeplink"
-	"github.com/pklaschka/elappma/internal/install"
-	"github.com/pklaschka/elappma/internal/pick"
-	"github.com/pklaschka/elappma/internal/store"
+	"github.com/pklaschka/lieferling/internal/deeplink"
+	"github.com/pklaschka/lieferling/internal/install"
+	"github.com/pklaschka/lieferling/internal/pick"
+	"github.com/pklaschka/lieferling/internal/store"
 )
 
 // Progress is sent to the window while a download runs.
@@ -83,7 +83,7 @@ func (s *AppService) Install(ctx context.Context, repo string) (store.Status, er
 		return st, translate(err)
 	}
 	if install.SamePath(st.Path, s.self) && s.relaunch != nil {
-		// Elappma just replaced itself: start the new copy
+		// Lieferling just replaced itself: start the new copy
 		go s.relaunch()
 		return st, nil
 	}
@@ -91,7 +91,7 @@ func (s *AppService) Install(ctx context.Context, repo string) (store.Status, er
 	return st, nil
 }
 
-// TakeLink returns the deep link that opened Elappma, once, or nil.
+// TakeLink returns the deep link that opened Lieferling, once, or nil.
 func (s *AppService) TakeLink() *deeplink.Link {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -177,13 +177,13 @@ func (s *AppService) remember(list []store.Status) {
 func translate(err error) error {
 	msg := err.Error()
 	for en, de := range map[string]string{
-		"repository or release not found (private repositories need a token)": "Repository oder Release nicht gefunden. Private Repositories brauchen einen GitHub-Token.",
-		"installing is not supported on this system yet":                      "Installieren geht auf diesem System noch nicht, bisher nur unter macOS.",
-		"is not a GitHub repository (owner/name or its URL)":                  "ist kein GitHub-Repository. Erwartet wird owner/name oder die URL.",
-		"has nothing to install on":                                           "hat keine passende Datei für",
-		"no release in the stable channel":                                    "hat noch kein stabiles Release",
-		"no release in the prerelease channel":                                "hat noch kein Release",
-		"Elappma cannot remove itself while it runs: quit it and move it to the Bin": "Elappma kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
+		"repository or release not found (private repositories need a token)":           "Repository oder Release nicht gefunden. Private Repositories brauchen einen GitHub-Token.",
+		"installing is not supported on this system yet":                                "Installieren geht auf diesem System noch nicht, bisher nur unter macOS.",
+		"is not a GitHub repository (owner/name or its URL)":                            "ist kein GitHub-Repository. Erwartet wird owner/name oder die URL.",
+		"has nothing to install on":                                                     "hat keine passende Datei für",
+		"no release in the stable channel":                                              "hat noch kein stabiles Release",
+		"no release in the prerelease channel":                                          "hat noch kein Release",
+		"Lieferling cannot remove itself while it runs: quit it and move it to the Bin": "Lieferling kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
 	} {
 		if strings.Contains(msg, en) {
 			msg = strings.Replace(msg, en, de, 1)

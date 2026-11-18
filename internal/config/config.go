@@ -20,7 +20,7 @@ type App struct {
 	Repo    string `json:"repo"`    // owner/name
 	Channel string `json:"channel"` // pick.Stable or pick.Prerelease
 	// AppName is the bundle name learned at the first install (such as
-	// "Feldspur"), so other computers can find a copy installed without Elappma.
+	// "Feldspur"), so other computers can find a copy installed without Lieferling.
 	AppName string `json:"appName,omitempty"`
 }
 
@@ -50,24 +50,35 @@ func (c *Config) Interval() int {
 	return c.CheckIntervalHours
 }
 
-// DefaultPath is ELAPPMA_CONFIG if set, else Elappma/config.json in iCloud Drive
-// on a Mac that has it, else in the user's configuration directory.
+// DefaultPath is LIEFERLING_CONFIG if set, else Lieferling/config.json in
+// iCloud Drive on a Mac that has it, else in the user's configuration
+// directory.
 func DefaultPath() string {
-	if p := os.Getenv("ELAPPMA_CONFIG"); p != "" {
+	if p := os.Getenv("LIEFERLING_CONFIG"); p != "" {
 		return p
 	}
+	if p := os.Getenv("ELAPPMA_CONFIG"); p != "" { // the old name
+		return p
+	}
+	return pathIn("Lieferling")
+}
+
+// LegacyPath is where Lieferling kept the list while it was called Elappma.
+func LegacyPath() string { return pathIn("Elappma") }
+
+func pathIn(folder string) string {
 	home, _ := os.UserHomeDir()
 	if runtime.GOOS == "darwin" && home != "" {
 		icloud := filepath.Join(home, "Library", "Mobile Documents", "com~apple~CloudDocs")
 		if st, err := os.Stat(icloud); err == nil && st.IsDir() {
-			return filepath.Join(icloud, "Elappma", "config.json")
+			return filepath.Join(icloud, folder, "config.json")
 		}
 	}
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		dir = home
 	}
-	return filepath.Join(dir, "Elappma", "config.json")
+	return filepath.Join(dir, folder, "config.json")
 }
 
 // Load reads the configuration. A missing file is an empty configuration.

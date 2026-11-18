@@ -4,12 +4,13 @@ import "testing"
 
 func TestParse(t *testing.T) {
 	for raw, want := range map[string]Link{
-		"elappma://add?repo=pklaschka/feldspur":                                    {Repo: "pklaschka/feldspur"},
-		"elappma://add?repo=pklaschka/feldspur&install=1":                          {Repo: "pklaschka/feldspur", Install: true},
-		"elappma://add?repo=https://github.com/pklaschka/feldspur&prerelease=true": {Repo: "pklaschka/feldspur", Prerelease: true},
-		"elappma://add/pklaschka/feldspur":                                         {Repo: "pklaschka/feldspur"},
-		"elappma://install/pklaschka/feldspur?channel=prerelease":                  {Repo: "pklaschka/feldspur", Install: true, Prerelease: true},
-		"ELAPPMA://Install?repo=pklaschka%2Ffeldspur":                              {Repo: "pklaschka/feldspur", Install: true},
+		"lieferling://add?repo=pklaschka/feldspur":                                    {Repo: "pklaschka/feldspur"},
+		"lieferling://add?repo=pklaschka/feldspur&install=1":                          {Repo: "pklaschka/feldspur", Install: true},
+		"lieferling://add?repo=https://github.com/pklaschka/feldspur&prerelease=true": {Repo: "pklaschka/feldspur", Prerelease: true},
+		"lieferling://add/pklaschka/feldspur":                                         {Repo: "pklaschka/feldspur"},
+		"lieferling://install/pklaschka/feldspur?channel=prerelease":                  {Repo: "pklaschka/feldspur", Install: true, Prerelease: true},
+		"elappma://add?repo=pklaschka/feldspur":                                       {Repo: "pklaschka/feldspur"},
+		"LIEFERLING://Install?repo=pklaschka%2Ffeldspur":                              {Repo: "pklaschka/feldspur", Install: true},
 	} {
 		got, err := Parse(raw)
 		if err != nil || got != want {
@@ -18,9 +19,9 @@ func TestParse(t *testing.T) {
 	}
 	for _, raw := range []string{
 		"https://github.com/pklaschka/feldspur",
-		"elappma://remove?repo=pklaschka/feldspur",
-		"elappma://add",
-		"elappma://add?repo=not-a-repo",
+		"lieferling://remove?repo=pklaschka/feldspur",
+		"lieferling://add",
+		"lieferling://add?repo=not-a-repo",
 	} {
 		if _, err := Parse(raw); err == nil {
 			t.Errorf("Parse(%q) succeeded", raw)

@@ -6,10 +6,10 @@ version: '3'
 # This information is used to generate the build assets.
 info:
   companyName: "Zuri Nimca Klaschka" # The name of the company
-  productName: "Elappma" # The name of the application
-  productIdentifier: "de.pklaschka.elappma" # The unique product identifier
+  productName: "Lieferling" # The name of the application
+  productIdentifier: "de.pklaschka.lieferling" # The unique product identifier
   description: "Installs and updates apps from GitHub releases" # The application description
-  copyright: "(c) 2026, Zuri Nimca Klaschka" # Copyright text
+  copyright: "(c) 2026, Zuri Nimca Klaschka. EUPL-1.2" # Copyright text
   comments: "" # Comments
   version: "0.0.1" # The application version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
@@ -86,7 +86,9 @@ fileAssociations:
 other:
   - name: My Other Data
 
-# Deep links: elappma://add?repo=owner/name (see README)
+# Deep links: lieferling://add?repo=owner/name (see README)
 protocols:
+  - scheme: lieferling
+    description: Lieferling deep link
   - scheme: elappma
-    description: Elappma deep link
+    description: Deep link from when Lieferling was called Elappma

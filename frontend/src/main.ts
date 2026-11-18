@@ -1,7 +1,7 @@
 import {Clipboard, Events} from "@wailsio/runtime";
-import {AppService} from "../bindings/github.com/pklaschka/elappma";
-import type {Link} from "../bindings/github.com/pklaschka/elappma/internal/deeplink/models";
-import type {Status} from "../bindings/github.com/pklaschka/elappma/internal/store/models";
+import {AppService} from "../bindings/github.com/pklaschka/lieferling";
+import type {Link} from "../bindings/github.com/pklaschka/lieferling/internal/deeplink/models";
+import type {Status} from "../bindings/github.com/pklaschka/lieferling/internal/store/models";
 
 const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
 
@@ -260,7 +260,7 @@ function confirmRemove(app: Status) {
   $("#remove-title", removeDialog).textContent = `${app.name} von der Liste entfernen?`;
   const uninstall = $<HTMLInputElement>('input[name="uninstall"]', removeDialog);
   uninstall.checked = false;
-  uninstall.closest("label")!.hidden = !app.managedByElappma;
+  uninstall.closest("label")!.hidden = !app.managedByLieferling;
   removeDialog.showModal();
 }
 
@@ -284,7 +284,7 @@ removeDialog.addEventListener("close", async () => {
 async function copyLink(li: HTMLLIElement, app: Status) {
   try {
     const url = await AppService.LinkFor(app.repo, true);
-    await Clipboard.SetText(`[In Elappma installieren](${url})`);
+    await Clipboard.SetText(`[In Lieferling installieren](${url})`);
     flash(li, "Link kopiert");
   } catch (err) {
     showRowError(li, errorText(err));
@@ -328,7 +328,7 @@ async function takeLink() {
   $<HTMLElement>('[data-field="install"]', linkDialog).hidden = !!known;
   $<HTMLElement>('[data-field="prerelease"]', linkDialog).hidden = !!known;
   $("#link-title", linkDialog).textContent = known ?
-    `${known.name} installieren?` : `${link.repo} zu Elappma hinzufügen?`;
+    `${known.name} installieren?` : `${link.repo} zu Lieferling hinzufügen?`;
   $('button[value="ok"]', linkDialog).textContent = known ? "Installieren" : "Hinzufügen";
   if (linkDialog.open) linkDialog.close();
   linkDialog.returnValue = "";

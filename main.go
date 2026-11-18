@@ -1,5 +1,5 @@
-// Elappma installs and updates apps from GitHub releases. This is the app
-// with a window and a menu bar icon; cmd/elappma is the command line. Both
+// Lieferling installs and updates apps from GitHub releases. This is the app
+// with a window and a menu bar icon; cmd/lieferling is the command line. Both
 // share the core in internal/.
 package main
 
@@ -7,6 +7,7 @@ import (
 	"context"
 	"embed"
 	"log"
+	"path/filepath"
 	"runtime"
 	"slices"
 	"strings"
@@ -16,8 +17,8 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/events"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 
-	"github.com/pklaschka/elappma/internal/install"
-	"github.com/pklaschka/elappma/internal/store"
+	"github.com/pklaschka/lieferling/internal/install"
+	"github.com/pklaschka/lieferling/internal/store"
 )
 
 //go:embed all:frontend/dist
@@ -39,7 +40,7 @@ func main() {
 	notifier := notifications.New()
 
 	app := application.New(application.Options{
-		Name:        "Elappma",
+		Name:        "Lieferling",
 		Description: "Installs and updates apps from GitHub releases",
 		Services: []application.Service{
 			application.NewService(svc),
@@ -64,14 +65,14 @@ func main() {
 	appMenu.AddRole(application.EditMenu)
 	appMenu.AddRole(application.WindowMenu)
 	help := appMenu.AddSubmenu("Hilfe")
-	help.Add("Elappma auf GitHub").OnClick(func(*application.Context) {
-		_ = app.Browser.OpenURL("https://github.com/pklaschka/elappma#readme")
+	help.Add("Lieferling auf GitHub").OnClick(func(*application.Context) {
+		_ = app.Browser.OpenURL("https://github.com/pklaschka/lieferling#readme")
 	})
 	app.Menu.SetApplicationMenu(appMenu)
 
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:      "main",
-		Title:     "Elappma",
+		Title:     "Lieferling",
 		Width:     760,
 		Height:    560,
 		MinWidth:  520,
@@ -82,7 +83,7 @@ func main() {
 		},
 		URL: "/",
 	})
-	// closing the window hides it; Elappma keeps checking from the menu bar
+	// closing the window hides it; Lieferling keeps checking from the menu bar
 	window.RegisterHook(events.Common.WindowClosing, func(e *application.WindowEvent) {
 		window.Hide()
 		e.Cancel()
@@ -98,7 +99,7 @@ func main() {
 		}
 	}
 
-	// elappma:// links, from the landing page or a click elsewhere
+	// lieferling:// links, from the landing page or a click elsewhere
 	app.Event.OnApplicationEvent(events.Common.ApplicationLaunchedWithUrl, func(e *application.ApplicationEvent) {
 		svc.openLink(e.Context().URL())
 		show()
@@ -109,14 +110,14 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		tray.SetTemplateIcon(trayIcon)
 	}
-	tray.SetTooltip("Elappma")
+	tray.SetTooltip("Lieferling")
 	menu := app.NewMenu()
-	menu.Add("Elappma öffnen").OnClick(func(*application.Context) { show() })
+	menu.Add("Lieferling öffnen").OnClick(func(*application.Context) { show() })
 	menu.Add("Nach Updates suchen").OnClick(func(*application.Context) {
 		go checker.check(context.Background(), true)
 	})
 	menu.AddSeparator()
-	menu.Add("Elappma beenden").OnClick(func(*application.Context) { app.Quit() })
+	menu.Add("Lieferling beenden").OnClick(func(*application.Context) { app.Quit() })
 	tray.SetMenu(menu)
 	checker.tray = tray
 
@@ -129,6 +130,9 @@ func main() {
 			}
 		}()
 		go checker.loop()
+		if svc.self != "" {
+			go retireElappma(filepath.Dir(svc.self))
+		}
 	})
 
 	if err := app.Run(); err != nil {
@@ -196,7 +200,7 @@ func (c *updateChecker) check(ctx context.Context, asked bool) {
 
 func (c *updateChecker) notify(title, body string) {
 	err := c.notifier.SendNotification(notifications.NotificationOptions{
-		ID:    "elappma-updates",
+		ID:    "lieferling-updates",
 		Title: title,
 		Body:  body,
 	})

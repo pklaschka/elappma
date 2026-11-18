@@ -1,6 +1,6 @@
 # Notes for coding agents
 
-- Keep the core in `internal/` free of UI code; the command line (`cmd/elappma`) and the Wails app (`main.go`, `service.go`) are thin layers over `internal/store`.
+- Keep the core in `internal/` free of UI code; the command line (`cmd/lieferling`) and the Wails app (`main.go`, `service.go`) are thin layers over `internal/store`.
 - Run `go test ./internal/... ./cmd/...` after changing the core.
 - The app's UI is German; the command line and code comments are English.
 - New platforms get their own `internal/install/install_<os>.go`; `pick` already chooses assets for Windows (`.exe`, `.msi`) and Linux (`.AppImage`).
