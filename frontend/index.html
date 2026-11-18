@@ -45,7 +45,8 @@
 
     <section aria-labelledby="apps-heading">
       <h2 id="apps-heading" class="visually-hidden">Apps</h2>
-      <ul id="apps" class="parcels" aria-busy="true"></ul>
+      <ul id="loading" class="parcels loading" aria-hidden="true"></ul>
+      <ul id="apps" class="parcels" aria-busy="true" hidden></ul>
       <div id="empty" class="empty" hidden>
         <h3>Noch keine Apps</h3>
         <p>Trag oben ein GitHub-Repository ein, dessen Releases eine App enthalten, etwa <code>pklaschka/feldspur</code>. Die Liste gilt auf all deinen Macs, installiert wird auf jedem Mac einzeln.</p>
@@ -84,6 +85,8 @@
         <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
       </button>
       <div class="menu" popover role="menu">
+        <button type="button" role="menuitem" data-act="open">Öffnen</button>
+        <hr>
         <button type="button" role="menuitemcheckbox" aria-checked="false" data-act="channel">
           <svg class="icon tick" aria-hidden="true"><use href="#i-check"/></svg>
           Vorabversionen verfolgen
@@ -97,6 +100,21 @@
         <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
         <span></span>
       </p>
+    </li>
+  </template>
+
+  <template id="ghost">
+    <li class="parcel ghost">
+      <div class="who">
+        <span class="slip name-slip"></span>
+        <span class="slip repo-slip"></span>
+      </div>
+      <div class="shipment">
+        <span class="slip number-slip"></span>
+        <span class="transit"><i></i><i></i><i></i></span>
+      </div>
+      <div class="action-cell"><span class="slip button-slip"></span></div>
+      <span class="more-slip"></span>
     </li>
   </template>
 

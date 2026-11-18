@@ -122,22 +122,25 @@ Small radii: 6px for controls, 4px for menu items, 3px for the "Vorab" tag, 10px
 ## Components
 
 ### Buttons
-Outlined on label stock by default. Variants: **ink** (filled black, the one action on a row that is not current), **express** (filled red, "Aktualisieren" and "Alle aktualisieren"), **on-kraft** (outlined, in the bar), **danger** (red text, red-soft on hover), **icon-only** (borderless, the more button).
+Outlined on label stock by default; a current row uses it for "Öffnen", which starts the installed app (hidden on Lieferling's own row). Variants: **ink** (filled black, the one action on a row that is not current), **express** (filled red, "Aktualisieren" and "Alle aktualisieren"), **on-kraft** (outlined, in the bar), **danger** (red text, red-soft on hover), **icon-only** (borderless, the more button).
 
 ### Inputs
 One text field with the hint in the placeholder, a checkbox for prerelease, an error line below that reserves its height so the form does not jump.
 
 ### Menu
-A popover under the more button with a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
+A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
 
 ### Tracking strip (signature)
 An ordered list of three stops drawn as dots joined by legs. States come from `data-state` on the parcel: `current` (all green), `missing` (released in ink, rest pending), `update` (released in red), `failed` (strip hidden, "Kein Release erreichbar"). While installing, `data-busy` takes over: the first leg fills with download progress (`--progress`), the "Geladen" stop pulses, then the second leg half-fills during install. Motion stops under reduced motion.
+
+### Loading parcels
+Until the first list arrives, blank parcels stand on the same subgrid as the real rows and have the same height, as many as the list had last time (kept per Mac in local storage, 1 to 6, 3 the first time). Name, repository, number and stop labels are slips (`pending` mixed into label stock, 3px radius), the action is a dashed outline the size of a button. The one moving thing: a short `ink-2` segment travels along each blank tracking strip, rows a little out of step; under reduced motion it stands still in the middle. The bar reads "Sendungen werden abgerufen …". The placeholders stay at least 700 ms so a fast answer does not flicker, then the rows fade in from 3px below. Refreshing later keeps the current rows instead.
 
 ## Do's and Don'ts
 
 ### Do:
 - Let the row state drive color through `data-state`; never hand-color a single element.
-- Keep one primary action per row and hide it when there is nothing to do.
+- Keep one action per row: filled when something is due, outlined "Öffnen" when the app is current.
 - Write German, short, in full words ("Wird geladen …", not icons alone).
 
 ### Don't:

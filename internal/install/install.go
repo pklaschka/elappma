@@ -24,6 +24,9 @@ type Installer interface {
 	// InstalledVersion reads the version of an app called name that is
 	// installed without Lieferling, or "" when there is none.
 	InstalledVersion(name string) (version, path string)
+	// Open starts the app installed at path, or brings it to the front when
+	// it already runs.
+	Open(ctx context.Context, path string) error
 }
 
 // Result describes an installed app.
@@ -46,6 +49,9 @@ type Options struct {
 	// the caller then restarts.
 	Self string
 }
+
+// ErrNotInstalled is returned when asked to open an app that is not there.
+var ErrNotInstalled = errors.New("the app is not installed on this computer")
 
 // ErrSelf is returned when asked to uninstall the running app itself.
 var ErrSelf = errors.New("Lieferling cannot remove itself while it runs: quit it and move it to the Bin")

@@ -17,3 +17,5 @@ func (unsupported) Install(context.Context, string, string) (Result, error) {
 func (unsupported) Uninstall(context.Context, string) error { return ErrUnsupported }
 
 func (unsupported) InstalledVersion(string) (string, string) { return "", "" }
+
+func (unsupported) Open(context.Context, string) error { return ErrUnsupported }

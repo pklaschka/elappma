@@ -143,6 +143,14 @@ func (s *AppService) Remove(ctx context.Context, repo string, uninstall bool) er
 	return nil
 }
 
+// Open starts an installed app.
+func (s *AppService) Open(ctx context.Context, repo string) error {
+	if err := s.store.Open(ctx, repo); err != nil {
+		return translate(err)
+	}
+	return nil
+}
+
 // OpenURL opens a release page in the browser.
 func (s *AppService) OpenURL(url string) error {
 	if !strings.HasPrefix(url, "https://github.com/") {
@@ -167,6 +175,9 @@ func (s *AppService) changed(ctx context.Context) {
 
 func (s *AppService) remember(list []store.Status) {
 	translateAll(list)
+	for i := range list {
+		list[i].Self = s.self != "" && install.SamePath(list[i].Path, s.self)
+	}
 	s.mu.Lock()
 	s.last = list
 	s.mu.Unlock()
@@ -183,6 +194,7 @@ func translate(err error) error {
 		"has nothing to install on":                                                     "hat keine passende Datei für",
 		"no release in the stable channel":                                              "hat noch kein stabiles Release",
 		"no release in the prerelease channel":                                          "hat noch kein Release",
+		"the app is not installed on this computer":                                     "Die App ist auf diesem Mac nicht installiert.",
 		"Lieferling cannot remove itself while it runs: quit it and move it to the Bin": "Lieferling kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
 	} {
 		if strings.Contains(msg, en) {
