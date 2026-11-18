@@ -1,5 +1,6 @@
-import {Events} from "@wailsio/runtime";
+import {Clipboard, Events} from "@wailsio/runtime";
 import {AppService} from "../bindings/github.com/pklaschka/elappma";
+import type {Link} from "../bindings/github.com/pklaschka/elappma/internal/deeplink/models";
 import type {Status} from "../bindings/github.com/pklaschka/elappma/internal/store/models";
 
 const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
@@ -14,6 +15,7 @@ const addForm = $<HTMLFormElement>("#add");
 const repoInput = $<HTMLInputElement>("#repo");
 const addError = $<HTMLParagraphElement>("#add-error");
 const removeDialog = $<HTMLDialogElement>("#confirm-remove");
+const linkDialog = $<HTMLDialogElement>("#confirm-link");
 
 let apps: Status[] = [];
 const busy = new Set<string>(); // repos being installed right now
@@ -102,6 +104,7 @@ function createRow(repo: string): HTMLLIElement {
     if (act === "release" && app.releaseUrl) AppService.OpenURL(app.releaseUrl);
     if (act === "remove") confirmRemove(app);
     if (act === "channel") setChannel(li, app.channel !== "prerelease");
+    if (act === "link") copyLink(li, app);
   });
 
   $<HTMLButtonElement>(".action", li).addEventListener("click", () => install(li.dataset.repo!));
@@ -276,5 +279,82 @@ removeDialog.addEventListener("close", async () => {
   }
 });
 
+// ---- deep links ------------------------------------------------------------
+
+async function copyLink(li: HTMLLIElement, app: Status) {
+  try {
+    const url = await AppService.LinkFor(app.repo, true);
+    await Clipboard.SetText(`[In Elappma installieren](${url})`);
+    flash(li, "Link kopiert");
+  } catch (err) {
+    showRowError(li, errorText(err));
+  }
+}
+
+// flash shows a short note in the row's status slot.
+function flash(li: HTMLLIElement, text: string) {
+  if (busy.has(li.dataset.repo!)) return;
+  const status = $<HTMLSpanElement>(".status", li);
+  const action = $<HTMLButtonElement>(".action", li);
+  status.textContent = text;
+  status.hidden = false;
+  action.hidden = true;
+  setTimeout(() => {
+    if (busy.has(li.dataset.repo!)) return;
+    status.hidden = true;
+    action.hidden = action.dataset.unavailable === "true";
+  }, 1800);
+}
+
+let linked: Link | undefined;
+
+async function takeLink() {
+  const link = await AppService.TakeLink();
+  if (!link) return;
+  if (apps.length === 0) await load();
+  const known = apps.find((a) => a.repo.toLowerCase() === link.repo.toLowerCase());
+  const row = known && list.querySelector<HTMLLIElement>(`li[data-repo="${CSS.escape(known.repo)}"]`);
+  // already there and nothing to do: show it
+  if (known && (!link.install || known.installed && !known.updateAvailable)) {
+    row?.scrollIntoView({block: "nearest"});
+    row && flash(row, "Schon auf der Liste");
+    return;
+  }
+  linked = link;
+  const install = $<HTMLInputElement>('input[name="install"]', linkDialog);
+  const prerelease = $<HTMLInputElement>('input[name="prerelease"]', linkDialog);
+  install.checked = link.install;
+  prerelease.checked = link.prerelease;
+  $<HTMLElement>('[data-field="install"]', linkDialog).hidden = !!known;
+  $<HTMLElement>('[data-field="prerelease"]', linkDialog).hidden = !!known;
+  $("#link-title", linkDialog).textContent = known ?
+    `${known.name} installieren?` : `${link.repo} zu Elappma hinzufügen?`;
+  $('button[value="ok"]', linkDialog).textContent = known ? "Installieren" : "Hinzufügen";
+  if (linkDialog.open) linkDialog.close();
+  linkDialog.returnValue = "";
+  linkDialog.showModal();
+}
+
+linkDialog.addEventListener("close", async () => {
+  const link = linked;
+  linked = undefined;
+  if (linkDialog.returnValue !== "ok" || !link) return;
+  const known = apps.some((a) => a.repo.toLowerCase() === link.repo.toLowerCase());
+  const wanted = known || $<HTMLInputElement>('input[name="install"]', linkDialog).checked;
+  try {
+    if (!known) {
+      const prerelease = $<HTMLInputElement>('input[name="prerelease"]', linkDialog).checked;
+      const added = await AppService.Add(link.repo, prerelease);
+      render([...apps.filter((a) => a.repo !== added!.repo), added!]);
+    }
+    const app = apps.find((a) => a.repo.toLowerCase() === link.repo.toLowerCase());
+    if (wanted && app) await install(app.repo);
+  } catch (err) {
+    addError.textContent = errorText(err);
+  }
+});
+
+Events.On("link:opened", takeLink);
+
 AppService.ConfigPath().then((p) => ($("#config-path").textContent = p));
-load();
+load().then(takeLink);

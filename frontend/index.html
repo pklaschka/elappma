@@ -89,6 +89,7 @@
           Vorabversionen verfolgen
         </button>
         <button type="button" role="menuitem" data-act="release">Release auf GitHub öffnen</button>
+        <button type="button" role="menuitem" data-act="link">Link für die README kopieren</button>
         <hr>
         <button type="button" role="menuitem" data-act="remove" class="danger">Entfernen …</button>
       </div>
@@ -107,6 +108,19 @@
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Behalten</button>
         <button value="remove" class="button danger">Entfernen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-link" aria-labelledby="link-title" aria-describedby="link-note">
+    <form method="dialog">
+      <h2 id="link-title"></h2>
+      <p id="link-note">Ein Link hat Elappma geöffnet. Füge nur Repositories hinzu, deren Apps du vertraust.</p>
+      <label class="check" data-field="install"><input type="checkbox" name="install"> Gleich installieren</label>
+      <label class="check" data-field="prerelease"><input type="checkbox" name="prerelease"> Vorabversionen verfolgen</label>
+      <div class="dialog-actions">
+        <button value="cancel" class="button" autofocus>Abbrechen</button>
+        <button value="ok" class="button ink"></button>
       </div>
     </form>
   </dialog>

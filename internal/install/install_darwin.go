@@ -58,20 +58,35 @@ func (m *mac) Install(ctx context.Context, file, assetName string) (Result, erro
 
 	name := strings.TrimSuffix(filepath.Base(source), ".app")
 	target := filepath.Join(m.o.Dir, name+".app")
-	if err := quit(ctx, name); err != nil {
-		return Result{}, err
+	self := SamePath(target, m.o.Self)
+	// An app that was running is opened again afterwards, like an updater
+	// would. Elappma replacing itself stays open; its caller restarts it.
+	reopen := false
+	if !self && running(name) {
+		if err := quit(ctx, name); err != nil {
+			return Result{}, err
+		}
+		reopen = true
 	}
-	script := fmt.Sprintf("rm -rf %s && ditto %s %s && xattr -cr %s",
-		shellQuote(target), shellQuote(source), shellQuote(target), shellQuote(target))
+	// copy next to the old one first, so a failed copy leaves it in place
+	next := target + ".elappma-new"
+	script := fmt.Sprintf("rm -rf %[1]s && ditto %[2]s %[1]s && xattr -cr %[1]s && rm -rf %[3]s && mv %[1]s %[3]s",
+		shellQuote(next), shellQuote(source), shellQuote(target))
 	if err := m.shell(ctx, script, !writable(m.o.Dir) || (exists(target) && !writable(target))); err != nil {
 		return Result{}, fmt.Errorf("installing into %s: %w", m.o.Dir, err)
 	}
-	return Result{Path: target, AppName: name}, nil
+	if reopen {
+		_ = exec.Command("open", target).Run()
+	}
+	return Result{Path: target, AppName: name, Self: self}, nil
 }
 
 func (m *mac) Uninstall(ctx context.Context, path string) error {
 	if path == "" || !strings.HasSuffix(path, ".app") || !exists(path) {
 		return nil
+	}
+	if SamePath(path, m.o.Self) {
+		return ErrSelf
 	}
 	if err := quit(ctx, strings.TrimSuffix(filepath.Base(path), ".app")); err != nil {
 		return err
