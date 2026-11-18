@@ -114,7 +114,7 @@ One column of parcels on a four-row window grid: bar, add form, scrolling list, 
 
 ## Elevation & Depth
 
-Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the remove dialog.
+Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the dialogs.
 
 ## Shapes
 
@@ -130,6 +130,9 @@ One text field with the hint in the placeholder, a checkbox for prerelease, an e
 
 ### Menu
 A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
+
+### Command line dialog
+Opened from the app menu ("Kommandozeilen-Tool installieren …") or the quiet text button at the end of the footer. One dialog with four states set by `data-state`: `missing` (Abbrechen, Installieren), `other` (Behalten, Ersetzen), `linked` (Entfernen on the left, Fertig) and `unavailable` (Schließen). Below the note a dashed slip shows the link like an address: `/usr/local/bin/lieferling` on the first line, an arrow and the target in `ink-2` on the second, breaking only after a slash; once linked a delivered-green tick stands before it. The work happens with the dialog open because macOS asks for the password on top; the main button says "Wird installiert …" meanwhile. Closing the password dialog changes nothing and shows no error.
 
 ### Stamp
 Where a parcel label carries its postage, each parcel carries the app's own icon, 36px, left of the name. It comes from the installed .app bundle, or else from the icon file the repository builds the app from (such as `build/icon.png`); Lieferling keeps it in its cache and asks GitHub again after a week. Until it arrives, and for apps without one, the stamp field stays empty: a dashed `cut-line` frame on the macOS icon grid (inset a tenth on each side, so empty and filled stamps line up) with the app's initial in `ink-2`. A loaded icon fades in over the frame. No ring, shadow or tint is added to real icons; they bring their own shape.

@@ -28,6 +28,7 @@ func init() {
 	application.RegisterEvent[Progress]("install:progress")
 	application.RegisterEvent[[]store.Status]("apps:changed")
 	application.RegisterEvent[application.Void]("link:opened")
+	application.RegisterEvent[application.Void]("command:open")
 }
 
 // AppService is what the window calls. Each method maps to one thing the
@@ -174,6 +175,32 @@ func (s *AppService) OpenURL(url string) error {
 	return s.app.Browser.OpenURL(url)
 }
 
+// CommandLine says whether the lieferling command is set up in the terminal.
+func (s *AppService) CommandLine() install.Command {
+	return install.CommandStatus(install.BundledCommand(s.self), install.CommandPath)
+}
+
+// InstallCommandLine links the command line in this app into the PATH,
+// replacing an older copy there. macOS asks for an administrator password;
+// closing that dialog changes nothing and is no error.
+func (s *AppService) InstallCommandLine(ctx context.Context) (install.Command, error) {
+	bundled := install.BundledCommand(s.self)
+	err := install.LinkCommand(ctx, bundled, install.CommandPath, false)
+	if err != nil && !errors.Is(err, install.ErrCanceled) {
+		return s.CommandLine(), translate(err)
+	}
+	return s.CommandLine(), nil
+}
+
+// RemoveCommandLine takes the link out of the PATH again.
+func (s *AppService) RemoveCommandLine(ctx context.Context) (install.Command, error) {
+	err := install.UnlinkCommand(ctx, install.CommandPath, false)
+	if err != nil && !errors.Is(err, install.ErrCanceled) {
+		return s.CommandLine(), translate(err)
+	}
+	return s.CommandLine(), nil
+}
+
 // ConfigPath says where the shared list lives.
 func (s *AppService) ConfigPath() string { return s.store.ConfigPath }
 
@@ -211,6 +238,9 @@ func translate(err error) error {
 		"no release in the prerelease channel":                                          "hat noch kein Release",
 		"the app is not installed on this computer":                                     "Die App ist auf diesem Mac nicht installiert.",
 		"Lieferling cannot remove itself while it runs: quit it and move it to the Bin": "Lieferling kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
+		"this copy of Lieferling carries no command line":                               "Diese Ausgabe von Lieferling bringt keine Kommandozeile mit.",
+		"is not a link Lieferling made: remove it yourself":                             "ist kein Verweis von Lieferling. Entferne die Datei selbst, wenn du sie nicht mehr brauchst.",
+		"is a folder": "ist ein Ordner, kein Befehl. Lieferling lässt ihn unangetastet.",
 	} {
 		if strings.Contains(msg, en) {
 			msg = strings.Replace(msg, en, de, 1)
