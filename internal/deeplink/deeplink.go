@@ -5,6 +5,7 @@
 //	lieferling://add?repo=owner/name
 //	lieferling://add?repo=owner/name&install=1&prerelease=1
 //	lieferling://install/owner/name
+//	lieferling://add?repo=codeberg.org/owner/name   (Forgejo, Gitea: host/owner/name)
 package deeplink
 
 import (
@@ -35,7 +36,7 @@ func Parse(raw string) (Link, error) {
 	u, err := url.Parse(strings.TrimSpace(raw))
 	// elappma:// is the scheme from before the rename; old links keep working
 	if err != nil || !(strings.EqualFold(u.Scheme, Scheme) || strings.EqualFold(u.Scheme, "elappma")) {
-		return Link{}, fmt.Errorf("not an Lieferling link: %q", raw)
+		return Link{}, fmt.Errorf("not a Lieferling link: %q", raw)
 	}
 	q := u.Query()
 	repo := q.Get("repo")

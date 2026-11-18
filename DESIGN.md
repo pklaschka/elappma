@@ -128,7 +128,7 @@ Outlined on label stock by default; a current row uses it for "Öffnen", which s
 One text field with the hint in the placeholder, a checkbox for prerelease, an error line below that reserves its height so the form does not jump.
 
 ### Menu
-A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
+A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a link to the release page (named for its forge: GitHub, Codeberg or the host) and, after a rule, the destructive item.
 
 ### Tracking strip (signature)
 An ordered list of three stops drawn as dots joined by legs. States come from `data-state` on the parcel: `current` (all green), `missing` (released in ink, rest pending), `update` (released in red), `failed` (strip hidden, "Kein Release erreichbar"). While installing, `data-busy` takes over: the first leg fills with download progress (`--progress`), the "Geladen" stop pulses, then the second leg half-fills during install. Motion stops under reduced motion.

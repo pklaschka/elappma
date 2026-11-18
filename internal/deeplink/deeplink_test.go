@@ -11,6 +11,9 @@ func TestParse(t *testing.T) {
 		"lieferling://install/pklaschka/feldspur?channel=prerelease":                  {Repo: "pklaschka/feldspur", Install: true, Prerelease: true},
 		"elappma://add?repo=pklaschka/feldspur":                                       {Repo: "pklaschka/feldspur"},
 		"LIEFERLING://Install?repo=pklaschka%2Ffeldspur":                              {Repo: "pklaschka/feldspur", Install: true},
+		"lieferling://add?repo=codeberg.org/me/app":                                   {Repo: "codeberg.org/me/app"},
+		"lieferling://add?repo=https://codeberg.org/me/app/releases":                  {Repo: "codeberg.org/me/app"},
+		"lieferling://install/git.example.com:3000/me/app":                            {Repo: "git.example.com:3000/me/app", Install: true},
 	} {
 		got, err := Parse(raw)
 		if err != nil || got != want {
@@ -30,9 +33,16 @@ func TestParse(t *testing.T) {
 }
 
 func TestURLRoundTrip(t *testing.T) {
-	l := Link{Repo: "pklaschka/feldspur", Install: true, Prerelease: true}
-	got, err := Parse(l.URL())
-	if err != nil || got != l {
-		t.Fatalf("round trip of %s = %+v, %v", l.URL(), got, err)
+	for _, l := range []Link{
+		{Repo: "pklaschka/feldspur", Install: true, Prerelease: true},
+		{Repo: "codeberg.org/me/app", Install: true},
+	} {
+		got, err := Parse(l.URL())
+		if err != nil || got != l {
+			t.Fatalf("round trip of %s = %+v, %v", l.URL(), got, err)
+		}
+	}
+	if got := (Link{Repo: "codeberg.org/me/app"}).PageURL(); got != Page+"?repo=codeberg.org/me/app" {
+		t.Errorf("page link %s", got)
 	}
 }

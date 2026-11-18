@@ -31,10 +31,10 @@
 
   <main>
     <form id="add" class="add" novalidate>
-      <label for="repo" class="visually-hidden">GitHub-Repository</label>
+      <label for="repo" class="visually-hidden">Repository</label>
       <input id="repo" name="repo" type="text" required autocomplete="off" autocapitalize="off" spellcheck="false"
-             placeholder="Repository hinzufügen: owner/name oder GitHub-URL" aria-describedby="add-error"
-             pattern="\s*(https?://)?(www\.)?(github\.com[/:])?[\w.\-]+/[\w.\-]+.*">
+             placeholder="Repository hinzufügen: owner/name, codeberg.org/owner/name oder URL" aria-describedby="add-error"
+             pattern="\s*\S*[\w.\-]+/[\w.\-]+\S*\s*">
       <label class="check"><input type="checkbox" name="prerelease"> Vorabversionen</label>
       <button type="submit" class="button">
         <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
@@ -49,7 +49,7 @@
       <ul id="apps" class="parcels" aria-busy="true" hidden></ul>
       <div id="empty" class="empty" hidden>
         <h3>Noch keine Apps</h3>
-        <p>Trag oben ein GitHub-Repository ein, dessen Releases eine App enthalten, etwa <code>pklaschka/feldspur</code>. Die Liste gilt auf all deinen Macs, installiert wird auf jedem Mac einzeln.</p>
+        <p>Trag oben ein Repository ein, dessen Releases eine App enthalten, etwa <code>pklaschka/feldspur</code> von GitHub oder <code>codeberg.org/owner/name</code> von Forgejo und Gitea. Die Liste gilt auf all deinen Macs, installiert wird auf jedem Mac einzeln.</p>
       </div>
     </section>
   </main>
@@ -91,7 +91,7 @@
           <svg class="icon tick" aria-hidden="true"><use href="#i-check"/></svg>
           Vorabversionen verfolgen
         </button>
-        <button type="button" role="menuitem" data-act="release">Release auf GitHub öffnen</button>
+        <button type="button" role="menuitem" data-act="release">Release öffnen</button>
         <button type="button" role="menuitem" data-act="link">Link für die README kopieren</button>
         <hr>
         <button type="button" role="menuitem" data-act="remove" class="danger">Entfernen …</button>
