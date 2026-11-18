@@ -67,7 +67,15 @@ wails3 task darwin:package         # Elappma.app in bin/ (on a Mac)
 
 `ELAPPMA_CONFIG`, `ELAPPMA_STATE` and `ELAPPMA_APPLICATIONS` move the shared list, the local state and the install folder, which helps when trying things out.
 
-Releases: push a tag like `v0.1.0`; the release workflow builds the universal DMG and the command line and attaches them to the release.
+Releases are automatic: every merge into `main` is released. The release workflow picks the version from the commits since the last release (`scripts/next-version.sh`), builds the universal DMG and the command line, and publishes them as a GitHub release.
+
+| In a commit message | Version |
+|---|---|
+| `feat!:`, `BREAKING CHANGE:` or `[major]` | major (before 1.0.0: minor) |
+| `feat:`, `feat(scope):` or `[minor]` | minor |
+| anything else | patch |
+
+With squash merges the PR title is the commit message, so put the marker there.
 
 ## Layout
 

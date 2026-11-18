@@ -1,39 +1,63 @@
-# Builds Elappma for macOS when a tag like v0.1.0 is pushed and attaches the
-# DMG and the command line to that tag's GitHub release. Elappma can then
-# manage its own updates: add pklaschka/elappma to its list.
+# Releases every push to main (that is, every merge): tests, picks the next
+# version from the commits (scripts/next-version.sh), builds Elappma for
+# macOS and publishes a GitHub release with the DMG and the command line.
+# Elappma can then manage its own updates: add pklaschka/elappma to its list.
 name: Release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
+# one release at a time, in merge order
+concurrency:
+  group: release
+  cancel-in-progress: false
+
 jobs:
-  macos:
+  release:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # tags and history for the version
+      - name: Next version
+        id: version
+        run: |
+          version="$(scripts/next-version.sh)"
+          if [ -z "$version" ]; then
+            echo "Nothing new since the last release."
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
       - uses: actions/setup-go@v6
+        if: steps.version.outputs.version != ''
         with:
           go-version-file: go.mod
       - uses: actions/setup-node@v5
+        if: steps.version.outputs.version != ''
         with:
           node-version: 22
           cache: npm
           cache-dependency-path: frontend/package-lock.json
+      - name: Test
+        if: steps.version.outputs.version != ''
+        run: go test ./internal/... ./cmd/...
       - name: Install Wails
+        if: steps.version.outputs.version != ''
         run: |
           go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
           echo "$(go env GOPATH)/bin" >> "$GITHUB_PATH"
-      - name: Set the version from the tag
+      - name: Stamp the version into the app
+        if: steps.version.outputs.version != ''
         run: |
-          version="${GITHUB_REF_NAME#v}"
-          echo "VERSION=$version" >> "$GITHUB_ENV"
-          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $version" build/darwin/Info.plist
-          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $version" build/darwin/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString $VERSION" build/darwin/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $VERSION" build/darwin/Info.plist
       - name: Build the app (universal) and its DMG
+        if: steps.version.outputs.version != ''
         run: |
           wails3 task darwin:package:universal
           wails3 task darwin:create:dmg
@@ -41,17 +65,18 @@ jobs:
           mv bin/*.dmg "dist/Elappma-$VERSION-universal.dmg"
           ditto -c -k --keepParent bin/Elappma.app "dist/Elappma-$VERSION-mac-universal.zip"
       - name: Build the command line
+        if: steps.version.outputs.version != ''
         run: |
           for arch in arm64 amd64; do
             GOOS=darwin GOARCH=$arch go build -ldflags "-s -w" -o elappma ./cmd/elappma
             tar -czf "dist/elappma-cli-$VERSION-darwin-$arch.tar.gz" elappma
           done
-      - name: Attach to the release
+      - name: Publish the release
+        if: steps.version.outputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          prerelease=""
-          case "$VERSION" in *-*) prerelease="--prerelease" ;; esac
-          gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 \
-            || gh release create "$GITHUB_REF_NAME" --generate-notes $prerelease
-          gh release upload "$GITHUB_REF_NAME" dist/* --clobber
+          # a draft first, so Elappma never sees a release without its files
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" \
+            --generate-notes --draft dist/*
+          gh release edit "v$VERSION" --draft=false --latest
