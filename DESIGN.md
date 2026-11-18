@@ -41,6 +41,7 @@ typography:
 rounded:
   tag: "3px"
   item: "4px"
+  stamp: "7px"
   control: "6px"
   sheet: "10px"
 spacing:
@@ -109,7 +110,7 @@ System UI for everything a person reads, the mono stack for everything that is a
 
 ## Layout
 
-One column of parcels on a four-row window grid: bar, add form, scrolling list, footer. Each parcel is a subgrid row with four columns: who (name, repo), shipment (number and route), action, more menu. Parcels are separated by dashed cut lines, not boxes. Below 640px the shipment moves to a second row and the bar summary hides. The bar leaves 5.5rem on the left for the macOS traffic lights and is the window's drag region.
+One column of parcels on a four-row window grid: bar, add form, scrolling list, footer. Each parcel is a subgrid row with four columns: who (stamp, name, repo), shipment (number and route), action, more menu. Parcels are separated by dashed cut lines, not boxes. Below 640px the shipment moves to a second row, indented to line up with the name, and the bar summary hides. The bar leaves 5.5rem on the left for the macOS traffic lights and is the window's drag region.
 
 ## Elevation & Depth
 
@@ -117,7 +118,7 @@ Flat. The label lies on the table. Only things that float above the window cast 
 
 ## Shapes
 
-Small radii: 6px for controls, 4px for menu items, 3px for the "Vorab" tag, 10px for the dialog sheet. Route stops are 9px dots.
+Small radii: 6px for controls, 4px for menu items, 3px for the "Vorab" tag, 7px for the empty stamp field, 10px for the dialog sheet. Route stops are 9px dots.
 
 ## Components
 
@@ -133,11 +134,14 @@ A popover under the more button with "Öffnen" (disabled while the app is not in
 ### Command line dialog
 Opened from the app menu ("Kommandozeilen-Tool installieren …") or the quiet text button at the end of the footer. One dialog with four states set by `data-state`: `missing` (Abbrechen, Installieren), `other` (Behalten, Ersetzen), `linked` (Entfernen on the left, Fertig) and `unavailable` (Schließen). Below the note a dashed slip shows the link like an address: `/usr/local/bin/lieferling` on the first line, an arrow and the target in `ink-2` on the second, breaking only after a slash; once linked a delivered-green tick stands before it. The work happens with the dialog open because macOS asks for the password on top; the main button says "Wird installiert …" meanwhile. Closing the password dialog changes nothing and shows no error.
 
+### Stamp
+Where a parcel label carries its postage, each parcel carries the app's own icon, 36px, left of the name. It comes from the installed .app bundle, or else from the icon file the repository builds the app from (such as `build/icon.png`); Lieferling keeps it in its cache and asks GitHub again after a week. Until it arrives, and for apps without one, the stamp field stays empty: a dashed `cut-line` frame on the macOS icon grid (inset a tenth on each side, so empty and filled stamps line up) with the app's initial in `ink-2`. A loaded icon fades in over the frame. No ring, shadow or tint is added to real icons; they bring their own shape.
+
 ### Tracking strip (signature)
 An ordered list of three stops drawn as dots joined by legs. States come from `data-state` on the parcel: `current` (all green), `missing` (released in ink, rest pending), `update` (released in red), `failed` (strip hidden, "Kein Release erreichbar"). While installing, `data-busy` takes over: the first leg fills with download progress (`--progress`), the "Geladen" stop pulses, then the second leg half-fills during install. Motion stops under reduced motion.
 
 ### Loading parcels
-Until the first list arrives, blank parcels stand on the same subgrid as the real rows and have the same height, as many as the list had last time (kept per Mac in local storage, 1 to 6, 3 the first time). Name, repository, number and stop labels are slips (`pending` mixed into label stock, 3px radius), the action is a dashed outline the size of a button. The one moving thing: a short `ink-2` segment travels along each blank tracking strip, rows a little out of step; under reduced motion it stands still in the middle. The bar reads "Sendungen werden abgerufen …". The placeholders stay at least 700 ms so a fast answer does not flicker, then the rows fade in from 3px below. Refreshing later keeps the current rows instead.
+Until the first list arrives, blank parcels stand on the same subgrid as the real rows and have the same height, as many as the list had last time (kept per Mac in local storage, 1 to 6, 3 the first time). The stamp, name, repository, number and stop labels are slips (`pending` mixed into label stock, 3px radius), the action is a dashed outline the size of a button. The one moving thing: a short `ink-2` segment travels along each blank tracking strip, rows a little out of step; under reduced motion it stands still in the middle. The bar reads "Sendungen werden abgerufen …". The placeholders stay at least 700 ms so a fast answer does not flicker, then the rows fade in from 3px below. Refreshing later keeps the current rows instead.
 
 ## Do's and Don'ts
 
