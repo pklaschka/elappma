@@ -25,7 +25,7 @@ type mac struct{ o Options }
 // DMG or ZIP, quit the running copy, replace the old one and clear the
 // quarantine flag so macOS opens the unsigned app.
 func (m *mac) Install(ctx context.Context, file, assetName string) (Result, error) {
-	work, err := os.MkdirTemp("", "elappma-")
+	work, err := os.MkdirTemp("", "lieferling-")
 	if err != nil {
 		return Result{}, err
 	}
@@ -60,7 +60,7 @@ func (m *mac) Install(ctx context.Context, file, assetName string) (Result, erro
 	target := filepath.Join(m.o.Dir, name+".app")
 	self := SamePath(target, m.o.Self)
 	// An app that was running is opened again afterwards, like an updater
-	// would. Elappma replacing itself stays open; its caller restarts it.
+	// would. Lieferling replacing itself stays open; its caller restarts it.
 	reopen := false
 	if !self && running(name) {
 		if err := quit(ctx, name); err != nil {
@@ -69,7 +69,7 @@ func (m *mac) Install(ctx context.Context, file, assetName string) (Result, erro
 		reopen = true
 	}
 	// copy next to the old one first, so a failed copy leaves it in place
-	next := target + ".elappma-new"
+	next := target + ".lieferling-new"
 	script := fmt.Sprintf("rm -rf %[1]s && ditto %[2]s %[1]s && xattr -cr %[1]s && rm -rf %[3]s && mv %[1]s %[3]s",
 		shellQuote(next), shellQuote(source), shellQuote(target))
 	if err := m.shell(ctx, script, !writable(m.o.Dir) || (exists(target) && !writable(target))); err != nil {
@@ -164,7 +164,7 @@ func exists(p string) bool {
 }
 
 func writable(p string) bool {
-	f, err := os.CreateTemp(p, ".elappma-write-test-*")
+	f, err := os.CreateTemp(p, ".lieferling-write-test-*")
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) || isNotDir(err) {
 			return true // nothing there yet to be refused

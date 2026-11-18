@@ -10,14 +10,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/pklaschka/elappma/internal/config"
-	"github.com/pklaschka/elappma/internal/github"
-	"github.com/pklaschka/elappma/internal/install"
+	"github.com/pklaschka/lieferling/internal/config"
+	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/install"
 )
 
 type fakeInstaller struct {
 	installed map[string]string // asset name -> file contents
-	foreign   map[string]string // app name -> version installed without Elappma
+	foreign   map[string]string // app name -> version installed without Lieferling
 }
 
 func (f *fakeInstaller) Install(_ context.Context, file, asset string) (install.Result, error) {
@@ -129,7 +129,7 @@ func TestAddInstallUpdate(t *testing.T) {
 	}
 	fi.foreign["Demo"] = "0.9.0"
 	list, _ = other.List(ctx)
-	if a := list[0]; a.Installed != "0.9.0" || a.ManagedByElappma || !a.UpdateAvailable {
+	if a := list[0]; a.Installed != "0.9.0" || a.ManagedByLieferling || !a.UpdateAvailable {
 		t.Errorf("other computer: %+v", a)
 	}
 

@@ -1,8 +1,8 @@
-# Elappma
+# Lieferling
 
 ## What it is
 
-A small app store for one person's own computers. You add GitHub repositories whose releases carry desktop apps (mostly Electron apps, often unsigned, often private), and Elappma installs them, keeps them up to date and tells you when something new is out.
+A small app store for one person's own computers. You add GitHub repositories whose releases carry desktop apps (mostly Electron apps, often unsigned, often private), and Lieferling installs them, keeps them up to date and tells you when something new is out.
 
 ## Who uses it
 

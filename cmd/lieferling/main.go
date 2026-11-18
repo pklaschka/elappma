@@ -1,16 +1,16 @@
-// Command elappma manages apps installed from GitHub releases.
+// Command lieferling manages apps installed from GitHub releases.
 //
-//	elappma list                         apps on the list, installed and newest version
-//	elappma add <repo> [--prerelease]    put a repository on the list
-//	elappma install <repo>               install (adds it to the list if needed)
-//	elappma update [<repo>...]           update the given apps, or every app with an update
-//	elappma channel <repo> stable|prerelease
-//	elappma remove <repo> [--uninstall]  take it off the list (and off this computer)
-//	elappma paths                        where the shared and the local files are
+//	lieferling list                         apps on the list, installed and newest version
+//	lieferling add <repo> [--prerelease]    put a repository on the list
+//	lieferling install <repo>               install (adds it to the list if needed)
+//	lieferling update [<repo>...]           update the given apps, or every app with an update
+//	lieferling channel <repo> stable|prerelease
+//	lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
+//	lieferling paths                        where the shared and the local files are
 //
 // <repo> is owner/name or the repository's GitHub URL. Private repositories
 // need a token: GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the
-// Keychain item "Elappma GitHub".
+// Keychain item "Lieferling GitHub".
 package main
 
 import (
@@ -24,15 +24,15 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/pklaschka/elappma/internal/pick"
-	"github.com/pklaschka/elappma/internal/store"
+	"github.com/pklaschka/lieferling/internal/pick"
+	"github.com/pklaschka/lieferling/internal/store"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 	if err := run(ctx, store.New(), os.Args[1:], os.Stdout); err != nil {
-		fmt.Fprintln(os.Stderr, "elappma:", err)
+		fmt.Fprintln(os.Stderr, "lieferling:", err)
 		if errors.Is(err, errUsage) {
 			os.Exit(2)
 		}
@@ -43,7 +43,7 @@ func main() {
 var errUsage = errors.New("usage")
 
 func usage() error {
-	return fmt.Errorf("%w: elappma list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | channel <repo> stable|prerelease | remove <repo> [--uninstall] | paths", errUsage)
+	return fmt.Errorf("%w: lieferling list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | channel <repo> stable|prerelease | remove <repo> [--uninstall] | paths", errUsage)
 }
 
 func run(ctx context.Context, s *store.Store, args []string, out io.Writer) error {
@@ -67,7 +67,7 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 			return err
 		}
 		if len(list) == 0 {
-			fmt.Fprintln(out, "No apps yet. Add one with: elappma add owner/name")
+			fmt.Fprintln(out, "No apps yet. Add one with: lieferling add owner/name")
 			return nil
 		}
 		w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
@@ -96,7 +96,7 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 		if err != nil {
 			return err
 		}
-		fmt.Fprintf(out, "Added %s (%s, newest %s: %s). Install it with: elappma install %s\n", st.Repo, st.Channel, st.Latest, st.Asset, st.Repo)
+		fmt.Fprintf(out, "Added %s (%s, newest %s: %s). Install it with: lieferling install %s\n", st.Repo, st.Channel, st.Latest, st.Asset, st.Repo)
 		return nil
 
 	case "install":
@@ -128,7 +128,7 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 		var failed []string
 		for _, r := range repos {
 			if err := install(ctx, s, r, out); err != nil {
-				fmt.Fprintf(os.Stderr, "elappma: %s: %v\n", r, err)
+				fmt.Fprintf(os.Stderr, "lieferling: %s: %v\n", r, err)
 				failed = append(failed, r)
 			}
 		}
@@ -197,7 +197,7 @@ func channel(prerelease bool) string {
 }
 
 // reorder moves flags before the positional arguments, so that
-// "elappma add owner/name --prerelease" works as well.
+// "lieferling add owner/name --prerelease" works as well.
 func reorder(args []string) []string {
 	var flags, pos []string
 	for _, a := range args {
@@ -211,19 +211,19 @@ func reorder(args []string) []string {
 }
 
 const help = `
-elappma manages apps installed from GitHub releases.
+lieferling manages apps installed from GitHub releases.
 
-  elappma list                         apps on the list, installed and newest version
-  elappma add <repo> [--prerelease]    put a repository on the list
-  elappma install <repo>               install (adds it to the list if needed)
-  elappma update [<repo>...]           update the given apps, or every app with an update
-  elappma channel <repo> stable|prerelease
-  elappma remove <repo> [--uninstall]  take it off the list (and off this computer)
-  elappma paths                        where the shared and the local files are
+  lieferling list                         apps on the list, installed and newest version
+  lieferling add <repo> [--prerelease]    put a repository on the list
+  lieferling install <repo>               install (adds it to the list if needed)
+  lieferling update [<repo>...]           update the given apps, or every app with an update
+  lieferling channel <repo> stable|prerelease
+  lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
+  lieferling paths                        where the shared and the local files are
 
 <repo> is owner/name or the repository's GitHub URL. Private repositories need
 a token: GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the Keychain
-item "Elappma GitHub" (security add-generic-password -s "Elappma GitHub" -a github -w).
+item "Lieferling GitHub" (security add-generic-password -s "Lieferling GitHub" -a github -w).
 
-The list of apps is shared through iCloud Drive (Elappma/config.json); what is
+The list of apps is shared through iCloud Drive (Lieferling/config.json); what is
 installed is recorded on each computer.`

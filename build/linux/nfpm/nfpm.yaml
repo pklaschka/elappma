@@ -3,7 +3,7 @@
 #
 # The lines below are called `modelines`. See `:help modeline`
 
-name: "Elappma"
+name: "Lieferling"
 arch: ${GOARCH}
 platform: "linux"
 version: "0.0.1"
@@ -17,12 +17,12 @@ license: "MIT"
 release: "1"
 
 contents:
-  - src: "./bin/Elappma"
-    dst: "/usr/local/bin/Elappma"
+  - src: "./bin/Lieferling"
+    dst: "/usr/local/bin/Lieferling"
   - src: "./build/appicon.png"
-    dst: "/usr/share/icons/hicolor/128x128/apps/Elappma.png"
-  - src: "./build/linux/Elappma.desktop"
-    dst: "/usr/share/applications/Elappma.desktop"
+    dst: "/usr/share/icons/hicolor/128x128/apps/Lieferling.png"
+  - src: "./build/linux/Lieferling.desktop"
+    dst: "/usr/share/applications/Lieferling.desktop"
 
 # Default dependencies for the GTK4 + WebKitGTK 6.0 stack (Ubuntu 24.04+ / Debian 13+)
 depends:

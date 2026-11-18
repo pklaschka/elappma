@@ -10,10 +10,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pklaschka/elappma/internal/config"
+	"github.com/pklaschka/lieferling/internal/config"
 )
 
-// Installed is one app installed by Elappma.
+// Installed is one app installed by Lieferling.
 type Installed struct {
 	Version     string    `json:"version"`
 	Tag         string    `json:"tag"`
@@ -27,17 +27,27 @@ type State struct {
 	Apps map[string]Installed `json:"apps"`
 }
 
-// DefaultPath is ELAPPMA_STATE if set, else Elappma/state.json in the user's
+// DefaultPath is LIEFERLING_STATE if set, else Lieferling/state.json in the user's
 // configuration directory (on macOS: ~/Library/Application Support).
 func DefaultPath() string {
-	if p := os.Getenv("ELAPPMA_STATE"); p != "" {
+	if p := os.Getenv("LIEFERLING_STATE"); p != "" {
 		return p
 	}
+	if p := os.Getenv("ELAPPMA_STATE"); p != "" { // the old name
+		return p
+	}
+	return pathIn("Lieferling")
+}
+
+// LegacyPath is where the state was kept while Lieferling was called Elappma.
+func LegacyPath() string { return pathIn("Elappma") }
+
+func pathIn(folder string) string {
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		dir, _ = os.UserHomeDir()
 	}
-	return filepath.Join(dir, "Elappma", "state.json")
+	return filepath.Join(dir, folder, "state.json")
 }
 
 func key(repo string) string { return strings.ToLower(repo) }

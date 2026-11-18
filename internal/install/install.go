@@ -22,7 +22,7 @@ type Installer interface {
 	// Uninstall removes an app installed at path.
 	Uninstall(ctx context.Context, path string) error
 	// InstalledVersion reads the version of an app called name that is
-	// installed without Elappma, or "" when there is none.
+	// installed without Lieferling, or "" when there is none.
 	InstalledVersion(name string) (version, path string)
 }
 
@@ -35,7 +35,7 @@ type Result struct {
 
 // Options shared by the installers.
 type Options struct {
-	// Dir is where apps go; on macOS /Applications unless ELAPPMA_APPLICATIONS
+	// Dir is where apps go; on macOS /Applications unless LIEFERLING_APPLICATIONS
 	// is set.
 	Dir string
 	// Interactive allows asking for an administrator password with sudo in
@@ -48,7 +48,7 @@ type Options struct {
 }
 
 // ErrSelf is returned when asked to uninstall the running app itself.
-var ErrSelf = errors.New("Elappma cannot remove itself while it runs: quit it and move it to the Bin")
+var ErrSelf = errors.New("Lieferling cannot remove itself while it runs: quit it and move it to the Bin")
 
 // SelfBundle returns the .app bundle the running executable belongs to, or
 // "" when it does not run from one (the command line, go run).
@@ -81,10 +81,13 @@ func SamePath(a, b string) bool {
 	return clean(a) == clean(b)
 }
 
-// DefaultOptions uses ELAPPMA_APPLICATIONS and treats a terminal on stdin as
+// DefaultOptions uses LIEFERLING_APPLICATIONS and treats a terminal on stdin as
 // interactive.
 func DefaultOptions() Options {
-	o := Options{Dir: os.Getenv("ELAPPMA_APPLICATIONS")}
+	o := Options{Dir: os.Getenv("LIEFERLING_APPLICATIONS")}
+	if o.Dir == "" {
+		o.Dir = os.Getenv("ELAPPMA_APPLICATIONS") // the old name
+	}
 	if st, err := os.Stdin.Stat(); err == nil && st.Mode()&os.ModeCharDevice != 0 {
 		o.Interactive = true
 	}

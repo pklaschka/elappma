@@ -3,7 +3,7 @@
 <plist version="1.0">
 	<dict>
 		<key>CFBundleExecutable</key>
-		<string>Elappma</string>
+		<string>Lieferling</string>
 		<key>CFBundleGetInfoString</key>
 		<string>This is a comment</string>
 		<key>CFBundleIconFile</key>
@@ -11,9 +11,9 @@
 		<key>CFBundleIconName</key>
 		<string>appicon</string>
 		<key>CFBundleIdentifier</key>
-		<string>de.pklaschka.elappma</string>
+		<string>de.pklaschka.lieferling</string>
 		<key>CFBundleName</key>
-		<string>Elappma</string>
+		<string>Lieferling</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -22,7 +22,15 @@
 		<array>
 			<dict>
 				<key>CFBundleURLName</key>
-				<string>de.pklaschka.elappma.link</string>
+				<string>de.pklaschka.lieferling.link</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>lieferling</string>
+				</array>
+			</dict>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>de.pklaschka.lieferling.legacy-link</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
 					<string>elappma</string>
@@ -41,6 +49,6 @@
 		<key>NSHighResolutionCapable</key>
 		<string>true</string>
 		<key>NSHumanReadableCopyright</key>
-		<string>(c) 2026, Zuri Nimca Klaschka</string>
+		<string>(c) 2026, Zuri Nimca Klaschka. EUPL-1.2</string>
 	</dict>
 </plist>

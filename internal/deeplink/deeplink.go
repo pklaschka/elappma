@@ -1,10 +1,10 @@
-// Package deeplink reads elappma:// links, which a README can use (through
+// Package deeplink reads lieferling:// links, which a README can use (through
 // the landing page in site/, since GitHub only links to https) to put an app
 // on the list and, if asked, install it:
 //
-//	elappma://add?repo=owner/name
-//	elappma://add?repo=owner/name&install=1&prerelease=1
-//	elappma://install/owner/name
+//	lieferling://add?repo=owner/name
+//	lieferling://add?repo=owner/name&install=1&prerelease=1
+//	lieferling://install/owner/name
 package deeplink
 
 import (
@@ -12,15 +12,15 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/pklaschka/elappma/internal/store"
+	"github.com/pklaschka/lieferling/internal/store"
 )
 
-// Scheme is the URL scheme Elappma registers.
-const Scheme = "elappma"
+// Scheme is the URL scheme Lieferling registers.
+const Scheme = "lieferling"
 
 // Page is the landing page (site/, on GitHub Pages) that turns an https
-// link from a README into an elappma:// link.
-const Page = "https://pklaschka.github.io/elappma/"
+// link from a README into an lieferling:// link.
+const Page = "https://pklaschka.github.io/lieferling/"
 
 // Link is what a deep link asks for. The window still asks before acting:
 // a link comes from a web page.
@@ -33,13 +33,14 @@ type Link struct {
 // Parse reads a deep link.
 func Parse(raw string) (Link, error) {
 	u, err := url.Parse(strings.TrimSpace(raw))
-	if err != nil || !strings.EqualFold(u.Scheme, Scheme) {
-		return Link{}, fmt.Errorf("not an Elappma link: %q", raw)
+	// elappma:// is the scheme from before the rename; old links keep working
+	if err != nil || !(strings.EqualFold(u.Scheme, Scheme) || strings.EqualFold(u.Scheme, "elappma")) {
+		return Link{}, fmt.Errorf("not an Lieferling link: %q", raw)
 	}
 	q := u.Query()
 	repo := q.Get("repo")
 	if repo == "" {
-		repo = strings.Trim(u.Path, "/") // elappma://add/owner/name
+		repo = strings.Trim(u.Path, "/") // lieferling://add/owner/name
 	}
 	var l Link
 	switch strings.ToLower(u.Host) {
@@ -47,7 +48,7 @@ func Parse(raw string) (Link, error) {
 	case "install":
 		l.Install = true
 	default:
-		return Link{}, fmt.Errorf("unknown Elappma link %q: expected add or install", u.Host)
+		return Link{}, fmt.Errorf("unknown Lieferling link %q: expected add or install", u.Host)
 	}
 	if l.Repo, err = store.NormalizeRepo(repo); err != nil {
 		return Link{}, err
@@ -57,7 +58,7 @@ func Parse(raw string) (Link, error) {
 	return l, nil
 }
 
-// URL is the elappma:// link.
+// URL is the lieferling:// link.
 func (l Link) URL() string { return Scheme + "://add?" + l.query() }
 
 // PageURL is the https link to the landing page, for a README.

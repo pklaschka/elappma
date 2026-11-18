@@ -11,7 +11,7 @@ import (
 )
 
 // reopenAfterExit starts a small shell that waits for this process to end and
-// then opens bundle, the freshly installed copy of Elappma.
+// then opens bundle, the freshly installed copy of Lieferling.
 func reopenAfterExit(bundle string) error {
 	q := "'" + strings.ReplaceAll(bundle, "'", `'\''`) + "'"
 	cmd := exec.Command("/bin/sh", "-c",

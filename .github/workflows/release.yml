@@ -1,7 +1,7 @@
 # Releases every push to main (that is, every merge): tests, picks the next
-# version from the commits (scripts/next-version.sh), builds Elappma for
+# version from the commits (scripts/next-version.sh), builds Lieferling for
 # macOS and publishes a GitHub release with the DMG and the command line.
-# Elappma can then manage its own updates: add pklaschka/elappma to its list.
+# Lieferling can then manage its own updates: add pklaschka/lieferling to its list.
 name: Release
 
 on:
@@ -62,21 +62,21 @@ jobs:
           wails3 task darwin:package:universal
           wails3 task darwin:create:dmg
           mkdir -p dist
-          mv bin/*.dmg "dist/Elappma-$VERSION-universal.dmg"
-          ditto -c -k --keepParent bin/Elappma.app "dist/Elappma-$VERSION-mac-universal.zip"
+          mv bin/*.dmg "dist/Lieferling-$VERSION-universal.dmg"
+          ditto -c -k --keepParent bin/Lieferling.app "dist/Lieferling-$VERSION-mac-universal.zip"
       - name: Build the command line
         if: steps.version.outputs.version != ''
         run: |
           for arch in arm64 amd64; do
-            GOOS=darwin GOARCH=$arch go build -ldflags "-s -w" -o elappma ./cmd/elappma
-            tar -czf "dist/elappma-cli-$VERSION-darwin-$arch.tar.gz" elappma
+            GOOS=darwin GOARCH=$arch go build -ldflags "-s -w" -o lieferling ./cmd/lieferling
+            tar -czf "dist/lieferling-cli-$VERSION-darwin-$arch.tar.gz" lieferling
           done
       - name: Publish the release
         if: steps.version.outputs.version != ''
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # a draft first, so Elappma never sees a release without its files
+          # a draft first, so Lieferling never sees a release without its files
           gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" \
             --generate-notes --draft dist/*
           gh release edit "v$VERSION" --draft=false --latest

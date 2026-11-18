@@ -26,7 +26,7 @@ jobs:
           go vet ./internal/... ./cmd/...
           go test ./internal/... ./cmd/...
       - name: Cross-build the command line for macOS
-        run: GOOS=darwin GOARCH=arm64 go build ./cmd/elappma
+        run: GOOS=darwin GOARCH=arm64 go build ./cmd/lieferling
       - name: Install GTK 4 and WebKitGTK (the binding generator compiles the app)
         run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev
       - name: Build the frontend

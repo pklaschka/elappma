@@ -13,11 +13,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/pklaschka/elappma/internal/config"
-	"github.com/pklaschka/elappma/internal/github"
-	"github.com/pklaschka/elappma/internal/install"
-	"github.com/pklaschka/elappma/internal/pick"
-	"github.com/pklaschka/elappma/internal/state"
+	"github.com/pklaschka/lieferling/internal/config"
+	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/install"
+	"github.com/pklaschka/lieferling/internal/pick"
+	"github.com/pklaschka/lieferling/internal/state"
 )
 
 // Store does the work. Its zero value is not usable; use New.
@@ -34,9 +34,12 @@ type Store struct {
 
 // New returns a store with the default paths, GitHub token and installer.
 func New() *Store {
+	cfg, st := config.DefaultPath(), state.DefaultPath()
+	// best effort: without it the list starts empty, which Add can fix
+	_ = MigrateFromElappma(cfg, config.LegacyPath(), st, state.LegacyPath())
 	return &Store{
-		ConfigPath: config.DefaultPath(),
-		StatePath:  state.DefaultPath(),
+		ConfigPath: cfg,
+		StatePath:  st,
 		GitHub:     github.New(),
 		Installer:  install.New(install.DefaultOptions()),
 		GOOS:       runtime.GOOS,
@@ -51,16 +54,16 @@ type Status struct {
 	Channel   string `json:"channel"`
 	Installed string `json:"installed"` // version here, "" when not installed
 	Path      string `json:"path"`
-	// ManagedByElappma is false for a copy installed some other way (found
+	// ManagedByLieferling is false for a copy installed some other way (found
 	// through the app name another computer recorded).
-	ManagedByElappma bool   `json:"managedByElappma"`
-	Latest           string `json:"latest"` // newest version in the channel
-	LatestTag        string `json:"latestTag"`
-	PublishedAt      string `json:"publishedAt"`
-	ReleaseURL       string `json:"releaseUrl"`
-	Asset            string `json:"asset"` // file that would be installed
-	UpdateAvailable  bool   `json:"updateAvailable"`
-	Error            string `json:"error"`
+	ManagedByLieferling bool   `json:"managedByLieferling"`
+	Latest              string `json:"latest"` // newest version in the channel
+	LatestTag           string `json:"latestTag"`
+	PublishedAt         string `json:"publishedAt"`
+	ReleaseURL          string `json:"releaseUrl"`
+	Asset               string `json:"asset"` // file that would be installed
+	UpdateAvailable     bool   `json:"updateAvailable"`
+	Error               string `json:"error"`
 }
 
 var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
@@ -206,7 +209,7 @@ func (s *Store) status(ctx context.Context, a config.App, st state.State) Status
 		out.Name = a.Repo[strings.Index(a.Repo, "/")+1:]
 	}
 	if in, ok := st.Get(a.Repo); ok {
-		out.Installed, out.Path, out.ManagedByElappma = in.Version, in.Path, true
+		out.Installed, out.Path, out.ManagedByLieferling = in.Version, in.Path, true
 	} else if v, p := s.Installer.InstalledVersion(a.AppName); v != "" {
 		out.Installed, out.Path = v, p
 	}
@@ -271,7 +274,7 @@ func (s *Store) Install(ctx context.Context, repo string, progress Progress) (St
 		return Status{}, fmt.Errorf("release %s of %s has nothing to install on %s/%s (one still being built has no files yet)", rel.TagName, repo, s.GOOS, s.GOARCH)
 	}
 
-	f, err := os.CreateTemp("", "elappma-download-*-"+asset.Name)
+	f, err := os.CreateTemp("", "lieferling-download-*-"+asset.Name)
 	if err != nil {
 		return Status{}, err
 	}

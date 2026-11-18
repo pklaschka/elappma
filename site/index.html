@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
-  <title>In Elappma öffnen</title>
+  <title>In Lieferling öffnen</title>
   <link rel="icon" href="icon.png">
   <!-- GitHub READMEs only link to https, so a README links here and this
-       page hands the request to the app as an elappma:// link. -->
+       page hands the request to the app as an lieferling:// link. -->
   <style>
     :root {
       color-scheme: light dark;
@@ -70,15 +70,15 @@
   </style>
 </head>
 <body>
-  <header><img src="icon.png" width="28" height="28" alt="">Elappma</header>
+  <header><img src="icon.png" width="28" height="28" alt="">Lieferling</header>
   <main>
     <section id="ok" hidden>
       <h1 id="title"></h1>
       <p class="repo" id="repo"></p>
-      <p><a class="button" id="open">In Elappma öffnen</a></p>
-      <p class="muted">Elappma fragt nach, bevor es etwas hinzufügt oder installiert.</p>
+      <p><a class="button" id="open">In Lieferling öffnen</a></p>
+      <p class="muted">Lieferling fragt nach, bevor es etwas hinzufügt oder installiert.</p>
       <hr>
-      <p class="muted">Noch kein Elappma auf diesem Mac? <a href="https://github.com/pklaschka/elappma/releases/latest">Hier herunterladen</a>, in Programme ziehen und den Link danach noch einmal öffnen.</p>
+      <p class="muted">Noch kein Lieferling auf diesem Mac? <a href="https://github.com/pklaschka/lieferling/releases/latest">Hier herunterladen</a>, in Programme ziehen und den Link danach noch einmal öffnen.</p>
     </section>
     <section id="bad" hidden>
       <h1>Dieser Link ist unvollständig</h1>
@@ -94,9 +94,9 @@
       const link = new URLSearchParams({repo});
       if (install) link.set("install", "1");
       if (/^(1|true|yes|on)$/i.test(q.get("prerelease") || "")) link.set("prerelease", "1");
-      const url = "elappma://add?" + link.toString().replace(/%2F/g, "/");
+      const url = "lieferling://add?" + link.toString().replace(/%2F/g, "/");
       document.getElementById("title").textContent =
-        `${repo.split("/")[1]} ${install ? "mit Elappma installieren" : "zu Elappma hinzufügen"}`;
+        `${repo.split("/")[1]} ${install ? "mit Lieferling installieren" : "zu Lieferling hinzufügen"}`;
       document.getElementById("repo").textContent = repo;
       document.getElementById("open").href = url;
       document.getElementById("ok").hidden = false;
