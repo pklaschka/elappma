@@ -12,11 +12,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-go@v6
         with:
           go-version-file: go.mod
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -27,6 +27,8 @@ jobs:
           go test ./internal/... ./cmd/...
       - name: Cross-build the command line for macOS
         run: GOOS=darwin GOARCH=arm64 go build ./cmd/elappma
+      - name: Install GTK 4 and WebKitGTK (the binding generator compiles the app)
+        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev
       - name: Build the frontend
         run: |
           go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
