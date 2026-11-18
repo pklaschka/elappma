@@ -112,4 +112,4 @@ With squash merges the PR title is the commit message, so put the marker there.
 
 ## License
 
-Copyright (c) 2026 Zuri Klaschka. Licensed under the [European Union Public Licence v. 1.2](LICENSE) (EUPL-1.2).
+Copyright (c) 2026 Zuri Nimca Klaschka. Licensed under the [European Union Public Licence v. 1.2](LICENSE) (EUPL-1.2).
