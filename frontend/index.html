@@ -18,41 +18,37 @@
   </svg>
 
   <header class="bar">
-    <div class="bar-title">
-      <h1>Elappma</h1>
-      <p id="summary" class="summary" aria-live="polite"></p>
-    </div>
+    <h1>Elappma</h1>
+    <p id="summary" class="summary" aria-live="polite"></p>
     <div class="bar-actions">
-      <button type="button" id="refresh" class="button quiet" aria-describedby="summary">
+      <button type="button" id="update-all" class="button express" hidden>Alle aktualisieren</button>
+      <button type="button" id="refresh" class="button on-kraft">
         <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
         Prüfen
       </button>
-      <button type="button" id="update-all" class="button primary" hidden>Alle aktualisieren</button>
     </div>
   </header>
 
   <main>
     <form id="add" class="add" novalidate>
-      <label for="repo" class="add-label">Repository hinzufügen</label>
-      <div class="add-row">
-        <input id="repo" name="repo" type="text" required autocomplete="off" autocapitalize="off" spellcheck="false"
-               placeholder="owner/name oder GitHub-URL" aria-describedby="add-error"
-               pattern="\s*(https?://)?(www\.)?(github\.com[/:])?[\w.\-]+/[\w.\-]+.*">
-        <label class="check"><input type="checkbox" name="prerelease"> Vorabversionen</label>
-        <button type="submit" class="button">
-          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
-          Hinzufügen
-        </button>
-      </div>
+      <label for="repo" class="visually-hidden">GitHub-Repository</label>
+      <input id="repo" name="repo" type="text" required autocomplete="off" autocapitalize="off" spellcheck="false"
+             placeholder="Repository hinzufügen: owner/name oder GitHub-URL" aria-describedby="add-error"
+             pattern="\s*(https?://)?(www\.)?(github\.com[/:])?[\w.\-]+/[\w.\-]+.*">
+      <label class="check"><input type="checkbox" name="prerelease"> Vorabversionen</label>
+      <button type="submit" class="button">
+        <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+        Hinzufügen
+      </button>
       <p id="add-error" class="field-error" role="alert"></p>
     </form>
 
     <section aria-labelledby="apps-heading">
       <h2 id="apps-heading" class="visually-hidden">Apps</h2>
-      <ul id="apps" class="shelf" aria-busy="true"></ul>
+      <ul id="apps" class="parcels" aria-busy="true"></ul>
       <div id="empty" class="empty" hidden>
-        <p class="empty-title">Noch keine Apps</p>
-        <p>Füge oben ein GitHub-Repository hinzu, dessen Releases eine App enthalten, zum Beispiel <code>pklaschka/feldspur</code>. Die Liste gilt auf all deinen Macs.</p>
+        <h3>Noch keine Apps</h3>
+        <p>Trag oben ein GitHub-Repository ein, dessen Releases eine App enthalten, etwa <code>pklaschka/feldspur</code>. Die Liste gilt auf all deinen Macs, installiert wird auf jedem Mac einzeln.</p>
       </div>
     </section>
   </main>
@@ -62,29 +58,41 @@
   </footer>
 
   <template id="row">
-    <li class="app">
-      <div class="app-name">
+    <li class="parcel">
+      <div class="who">
         <span class="name"></span>
         <span class="repo"></span>
       </div>
-      <div class="app-version">
-        <span class="installed"></span>
-        <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
-        <span class="latest"></span>
+      <div class="shipment">
+        <p class="number">
+          <span class="installed"></span>
+          <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+          <span class="latest"></span>
+          <span class="channel-tag" hidden>Vorab</span>
+        </p>
+        <ol class="route">
+          <li data-stop="released">Erschienen</li>
+          <li data-stop="loaded">Geladen</li>
+          <li data-stop="installed">Installiert</li>
+        </ol>
       </div>
-      <label class="check channel"><input type="checkbox"> Vorab</label>
-      <div class="app-action">
+      <div class="action-cell">
         <button type="button" class="button action"></button>
-        <progress max="1" hidden></progress>
+        <span class="status" hidden></span>
       </div>
       <button type="button" class="button icon-only more" aria-haspopup="menu">
         <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
       </button>
       <div class="menu" popover role="menu">
-        <button type="button" role="menuitem" data-act="release">Release auf GitHub</button>
+        <button type="button" role="menuitemcheckbox" aria-checked="false" data-act="channel">
+          <svg class="icon tick" aria-hidden="true"><use href="#i-check"/></svg>
+          Vorabversionen verfolgen
+        </button>
+        <button type="button" role="menuitem" data-act="release">Release auf GitHub öffnen</button>
+        <hr>
         <button type="button" role="menuitem" data-act="remove" class="danger">Entfernen …</button>
       </div>
-      <p class="app-error" hidden>
+      <p class="problem" hidden>
         <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
         <span></span>
       </p>
@@ -94,7 +102,7 @@
   <dialog id="confirm-remove" aria-labelledby="remove-title">
     <form method="dialog">
       <h2 id="remove-title"></h2>
-      <p>Auf deinen anderen Macs bleibt die App installiert, nur die Liste ändert sich überall.</p>
+      <p>Auf deinen anderen Macs bleibt die App installiert. Nur die gemeinsame Liste ändert sich.</p>
       <label class="check"><input type="checkbox" name="uninstall"> Auch von diesem Mac löschen</label>
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Behalten</button>
