@@ -10,14 +10,14 @@ import (
 	"time"
 
 	"github.com/pklaschka/lieferling/internal/config"
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/icon"
 	"github.com/pklaschka/lieferling/internal/state"
 )
 
 // How long an icon found in a repository is kept before looking again, and
 // how long to wait after finding none. Both spare the GitHub rate limit,
-// which allows 60 requests an hour without a token.
+// which allows 60 requests an hour without a token, and the other servers.
 const (
 	repoIconFresh = 7 * 24 * time.Hour
 	noIconFresh   = 24 * time.Hour
@@ -95,9 +95,9 @@ func (c cached) found() (icon.Icon, error) {
 
 // repoIcon looks through the repository's files for the app icon.
 func (s *Store) repoIcon(ctx context.Context, repo string) (icon.Icon, string, error) {
-	tree, err := s.GitHub.Tree(ctx, repo)
+	tree, err := s.Forge.Tree(ctx, repo)
 	if err != nil {
-		if errors.Is(err, github.ErrNotFound) {
+		if errors.Is(err, forge.ErrNotFound) {
 			return icon.Icon{}, "", icon.ErrNone // an empty repository has no tree
 		}
 		return icon.Icon{}, "", err
@@ -110,7 +110,7 @@ func (s *Store) repoIcon(ctx context.Context, repo string) (icon.Icon, string, e
 	if !ok {
 		return icon.Icon{}, "", icon.ErrNone
 	}
-	data, err := s.GitHub.File(ctx, repo, file, icon.MaxFile)
+	data, err := s.Forge.File(ctx, repo, file, icon.MaxFile)
 	if err != nil {
 		return icon.Icon{}, file, err
 	}

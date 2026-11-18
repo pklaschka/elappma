@@ -1,4 +1,4 @@
-// Lieferling installs and updates apps from GitHub releases. This is the app
+// Lieferling installs and updates apps from GitHub, Forgejo and Gitea releases. This is the app
 // with a window and a menu bar icon; cmd/lieferling is the command line. Both
 // share the core in internal/.
 package main
@@ -41,7 +41,7 @@ func main() {
 
 	app := application.New(application.Options{
 		Name:        "Lieferling",
-		Description: "Installs and updates apps from GitHub releases",
+		Description: "Installs and updates apps from GitHub, Forgejo and Gitea releases",
 		Services: []application.Service{
 			application.NewService(svc),
 			application.NewService(notifier),

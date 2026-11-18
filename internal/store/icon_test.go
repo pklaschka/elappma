@@ -10,10 +10,11 @@ import (
 	"net/http/httptest"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"sync/atomic"
 	"testing"
 
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/icon"
 )
 
@@ -45,7 +46,7 @@ func TestIconFromRepository(t *testing.T) {
 		ConfigPath: filepath.Join(dir, "config.json"),
 		StatePath:  filepath.Join(dir, "state.json"),
 		CacheDir:   filepath.Join(dir, "icons"),
-		GitHub:     &github.Client{BaseURL: srv.URL},
+		Forge:      &forge.Client{GitHub: &forge.GitHub{BaseURL: srv.URL}, Gitea: &forge.Gitea{}},
 		Installer:  &fakeInstaller{foreign: map[string]string{}},
 	}
 	ctx := context.Background()
@@ -71,5 +72,47 @@ func TestIconFromRepository(t *testing.T) {
 	}
 	if _, err := s.Icon(ctx, "me/gone"); !errors.Is(err, icon.ErrNone) {
 		t.Errorf("missing repo: %v", err)
+	}
+}
+
+// TestIconFromForgejo finds the icon through the Forgejo/Gitea API: the
+// default branch from the repository, its tree, and the raw file.
+func TestIconFromForgejo(t *testing.T) {
+	var buf bytes.Buffer
+	png.Encode(&buf, image.NewNRGBA(image.Rect(0, 0, 512, 512)))
+	srv := httptest.NewTLSServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/api/v1/repos/me/demo":
+			w.Write([]byte(`{"default_branch":"trunk","empty":false}`))
+		case "/api/v1/repos/me/demo/git/trees/trunk":
+			if r.URL.Query().Get("recursive") != "true" {
+				http.Error(w, "not recursive", 400)
+				return
+			}
+			w.Write([]byte(`{"tree":[{"path":"build/icon.png","type":"blob","size":` + strconv.Itoa(buf.Len()) + `}]}`))
+		case "/api/v1/repos/me/demo/raw/build/icon.png":
+			w.Write(buf.Bytes())
+		case "/api/v1/repos/me/empty":
+			w.Write([]byte(`{"default_branch":"main","empty":true}`))
+		default:
+			http.NotFound(w, r)
+		}
+	}))
+	defer srv.Close()
+	host := strings.TrimPrefix(srv.URL, "https://")
+	dir := t.TempDir()
+	s := &Store{
+		ConfigPath: filepath.Join(dir, "config.json"),
+		StatePath:  filepath.Join(dir, "state.json"),
+		Forge: &forge.Client{GitHub: &forge.GitHub{}, Gitea: &forge.Gitea{
+			HTTP: srv.Client(), Token: func(string) string { return "" }}},
+		Installer: &fakeInstaller{foreign: map[string]string{}},
+	}
+	ctx := context.Background()
+	if ic, err := s.Icon(ctx, host+"/me/demo"); err != nil || ic.MIME != "image/png" {
+		t.Fatalf("Icon: %v %v", ic.MIME, err)
+	}
+	if _, err := s.Icon(ctx, host+"/me/empty"); !errors.Is(err, icon.ErrNone) {
+		t.Errorf("empty repo: %v", err)
 	}
 }

@@ -11,6 +11,8 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # a normal run takes about a minute; never wait long for a stuck one
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-go@v6
@@ -27,11 +29,10 @@ jobs:
           go test ./internal/... ./cmd/...
       - name: Cross-build the command line for macOS
         run: GOOS=darwin GOARCH=arm64 go build ./cmd/lieferling
-      - name: Install GTK 4 and WebKitGTK (the binding generator compiles the app)
-        run: sudo apt-get update && sudo apt-get install -y libgtk-4-dev libwebkitgtk-6.0-dev
       - name: Build the frontend
         run: |
-          go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
+          # the binding generator reads the Go code, it needs no GTK or WebKitGTK
+          CGO_ENABLED=0 go install github.com/wailsapp/wails/v3/cmd/wails3@v3.1.0
           wails3 generate bindings -ts -i -clean=true
           cd frontend && npm ci && npm run build
       - name: Cross-build the app for macOS (CGO-free backend)

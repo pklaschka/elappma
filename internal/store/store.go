@@ -1,5 +1,6 @@
 // Package store is the core that both the command line and the app use: it
-// joins the shared list of apps, what is installed here, and GitHub.
+// joins the shared list of apps, what is installed here, and the forges
+// (GitHub, Forgejo, Gitea) the releases come from.
 package store
 
 import (
@@ -7,14 +8,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"runtime"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/pklaschka/lieferling/internal/config"
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/install"
 	"github.com/pklaschka/lieferling/internal/pick"
 	"github.com/pklaschka/lieferling/internal/state"
@@ -25,7 +25,7 @@ type Store struct {
 	ConfigPath string
 	StatePath  string
 	CacheDir   string // icons; "" keeps nothing between calls
-	GitHub     *github.Client
+	Forge      *forge.Client
 	Installer  install.Installer
 	GOOS       string
 	GOARCH     string
@@ -33,7 +33,7 @@ type Store struct {
 	mu sync.Mutex // serializes installs and state writes
 }
 
-// New returns a store with the default paths, GitHub token and installer.
+// New returns a store with the default paths, tokens and installer.
 func New() *Store {
 	cfg, st := config.DefaultPath(), state.DefaultPath()
 	// best effort: without it the list starts empty, which Add can fix
@@ -42,7 +42,7 @@ func New() *Store {
 		ConfigPath: cfg,
 		StatePath:  st,
 		CacheDir:   cacheDir(),
-		GitHub:     github.New(),
+		Forge:      forge.New(),
 		Installer:  install.New(install.DefaultOptions()),
 		GOOS:       runtime.GOOS,
 		GOARCH:     runtime.GOARCH,
@@ -51,7 +51,9 @@ func New() *Store {
 
 // Status is what the list shows for one app.
 type Status struct {
-	Repo      string `json:"repo"`
+	Repo string `json:"repo"`
+	// Forge names where the repository lives: GitHub, Codeberg or a host.
+	Forge     string `json:"forge"`
 	Name      string `json:"name"`
 	Channel   string `json:"channel"`
 	Installed string `json:"installed"` // version here, "" when not installed
@@ -70,26 +72,15 @@ type Status struct {
 	Self bool `json:"self"`
 }
 
-var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
-
-// NormalizeRepo accepts owner/name and GitHub URLs (with or without .git).
+// NormalizeRepo accepts owner/name for GitHub, host/owner/name for a Forgejo
+// or Gitea server, and their URLs (with or without .git). GitHub
+// repositories are written owner/name, others host/owner/name.
 func NormalizeRepo(s string) (string, error) {
-	s = strings.TrimSpace(s)
-	for _, p := range []string{"https://", "http://", "git@"} {
-		s = strings.TrimPrefix(s, p)
+	r, err := forge.ParseRepo(s)
+	if err != nil {
+		return "", err
 	}
-	s = strings.TrimPrefix(s, "www.")
-	s = strings.TrimPrefix(s, "github.com/")
-	s = strings.TrimPrefix(s, "github.com:")
-	s = strings.TrimSuffix(strings.TrimSuffix(s, "/"), ".git")
-	parts := strings.Split(s, "/")
-	if len(parts) >= 2 {
-		s = parts[0] + "/" + parts[1] // drop /releases and the like
-	}
-	if !repoPattern.MatchString(s) {
-		return "", fmt.Errorf("%q is not a GitHub repository (owner/name or its URL)", s)
-	}
-	return s, nil
+	return r.String(), nil
 }
 
 func validChannel(ch string) (string, error) {
@@ -211,7 +202,7 @@ func (s *Store) installedPath(repo string, st state.State) string {
 // Config returns the shared configuration.
 func (s *Store) Config() (config.Config, error) { return config.Load(s.ConfigPath) }
 
-// List returns the status of every app, asking GitHub for all at once.
+// List returns the status of every app, asking the forges for all at once.
 func (s *Store) List(ctx context.Context) ([]Status, error) {
 	cfg, err := config.Load(s.ConfigPath)
 	if err != nil {
@@ -242,8 +233,13 @@ func (s *Store) status(ctx context.Context, a config.App, st state.State) Status
 	if out.Channel == "" {
 		out.Channel = pick.Stable
 	}
-	if out.Name == "" {
-		out.Name = a.Repo[strings.Index(a.Repo, "/")+1:]
+	if r, err := forge.ParseRepo(a.Repo); err == nil {
+		out.Forge = r.Forge()
+		if out.Name == "" {
+			out.Name = r.Name
+		}
+	} else if out.Name == "" {
+		out.Name = a.Repo
 	}
 	if in, ok := st.Get(a.Repo); ok {
 		out.Installed, out.Path, out.ManagedByLieferling = in.Version, in.Path, true
@@ -251,7 +247,7 @@ func (s *Store) status(ctx context.Context, a config.App, st state.State) Status
 		out.Installed, out.Path = v, p
 	}
 
-	releases, err := s.GitHub.Releases(ctx, a.Repo)
+	releases, err := s.Forge.Releases(ctx, a.Repo)
 	if err != nil {
 		out.Error = err.Error()
 		return out
@@ -298,7 +294,7 @@ func (s *Store) Install(ctx context.Context, repo string, progress Progress) (St
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
-	releases, err := s.GitHub.Releases(ctx, app.Repo)
+	releases, err := s.Forge.Releases(ctx, app.Repo)
 	if err != nil {
 		return Status{}, err
 	}
@@ -320,7 +316,7 @@ func (s *Store) Install(ctx context.Context, repo string, progress Progress) (St
 	if progress != nil {
 		cb = func(done, total int64) { progress(app.Repo, done, total) }
 	}
-	err = s.GitHub.Download(ctx, asset, f, cb)
+	err = s.Forge.Download(ctx, app.Repo, asset, f, cb)
 	if cerr := f.Close(); err == nil {
 		err = cerr
 	}

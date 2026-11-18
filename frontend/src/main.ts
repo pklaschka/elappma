@@ -34,8 +34,8 @@ function plural(n: number, one: string, many: string) {
 
 // ---- list -----------------------------------------------------------------
 
-// The first load asks GitHub about every app and can take a moment. Until it
-// answers, placeholder parcels stand where the rows will be, as many as last
+// The first load asks the forges about every app and can take a moment. Until
+// they answer, placeholder parcels stand where the rows will be, as many as last
 // time, and they stay at least this long so the window does not flicker.
 const MIN_LOADING_MS = 700;
 const COUNT_KEY = "lieferling:count";
@@ -214,6 +214,7 @@ function fillRow(li: HTMLLIElement, app: Status) {
   $<HTMLButtonElement>('[data-act="open"]', li).disabled = !app.installed || app.self;
   const releaseItem = $<HTMLButtonElement>('[data-act="release"]', li);
   releaseItem.disabled = !app.releaseUrl;
+  releaseItem.textContent = `Release auf ${app.forge || "GitHub"} öffnen`;
 
   showRowError(li, app.error);
   setBusy(li, busy.has(app.repo));
@@ -330,7 +331,7 @@ addForm.addEventListener("submit", async (e) => {
   if (!repoInput.checkValidity()) {
     addError.textContent = repoInput.validity.valueMissing ?
       "Gib ein Repository an, zum Beispiel pklaschka/feldspur." :
-      "Das sieht nicht nach einem GitHub-Repository aus. Erwartet wird owner/name oder die URL.";
+      "Das sieht nicht nach einem Repository aus. Erwartet wird owner/name für GitHub, host/owner/name für Forgejo und Gitea oder die URL.";
     repoInput.setAttribute("aria-invalid", "true");
     repoInput.focus();
     return;

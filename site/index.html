@@ -82,21 +82,23 @@
     </section>
     <section id="bad" hidden>
       <h1>Dieser Link ist unvollständig</h1>
-      <p class="error">Es fehlt ein Repository in der Form <code>owner/name</code>.</p>
+      <p class="error">Es fehlt ein Repository in der Form <code>owner/name</code> oder <code>host/owner/name</code>.</p>
     </section>
   </main>
   <script>
     const q = new URLSearchParams(location.search);
     const repo = (q.get("repo") || "").trim()
-      .replace(/^(https?:\/\/)?(www\.)?github\.com[\/:]/i, "").replace(/\.git$/, "").replace(/\/+$/, "");
-    if (/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+      .replace(/^(https?:\/\/)?(www\.)?github\.com[\/:]/i, "").replace(/^https?:\/\//i, "")
+      .replace(/\.git$/, "").replace(/\/+$/, "");
+    // owner/name on GitHub, host/owner/name on Forgejo and Gitea; Lieferling checks it again
+    if (/^(([a-z0-9-]+\.[a-z0-9.-]+|localhost)(:\d+)?\/[\w.-]+|[\w-]+)\/[\w.-]+$/i.test(repo)) {
       const install = /^(1|true|yes|on)$/i.test(q.get("install") || "");
       const link = new URLSearchParams({repo});
       if (install) link.set("install", "1");
       if (/^(1|true|yes|on)$/i.test(q.get("prerelease") || "")) link.set("prerelease", "1");
       const url = "lieferling://add?" + link.toString().replace(/%2F/g, "/");
       document.getElementById("title").textContent =
-        `${repo.split("/")[1]} ${install ? "mit Lieferling installieren" : "zu Lieferling hinzufügen"}`;
+        `${repo.split("/").at(-1)} ${install ? "mit Lieferling installieren" : "zu Lieferling hinzufügen"}`;
       document.getElementById("repo").textContent = repo;
       document.getElementById("open").href = url;
       document.getElementById("ok").hidden = false;
