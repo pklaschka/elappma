@@ -70,6 +70,28 @@ func (c *GitHub) Releases(ctx context.Context, repo string) ([]Release, error) {
 	return releases, nil
 }
 
+// Tree lists the files on the default branch of owner/repo (GitHub cuts very
+// large trees short, which is fine for finding an icon).
+func (c *GitHub) Tree(ctx context.Context, repo string) ([]TreeFile, error) {
+	resp, err := c.request(ctx, c.base()+"/repos/"+repo+"/git/trees/HEAD?recursive=1", "application/vnd.github+json")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", repo, err)
+	}
+	defer resp.Body.Close()
+	return readTree(resp.Body, repo)
+}
+
+// File returns a file from the default branch of owner/repo, at most limit
+// bytes; it works for private repositories with a token, too.
+func (c *GitHub) File(ctx context.Context, repo, file string, limit int64) ([]byte, error) {
+	resp, err := c.request(ctx, c.base()+"/repos/"+repo+"/contents/"+escapePath(file), "application/vnd.github.raw+json")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", repo, err)
+	}
+	defer resp.Body.Close()
+	return readLimited(resp.Body, repo, file, limit)
+}
+
 // Download writes the asset to w. progress, if set, is called as bytes arrive.
 func (c *GitHub) Download(ctx context.Context, a Asset, w io.Writer, progress func(done, total int64)) error {
 	resp, err := c.request(ctx, a.URL, "application/octet-stream")

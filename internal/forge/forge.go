@@ -6,10 +6,12 @@ package forge
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"regexp"
 	"strings"
 	"sync"
@@ -194,6 +196,74 @@ func (c *Client) Download(ctx context.Context, repo string, a Asset, w io.Writer
 		return c.GitHub.Download(ctx, a, w, progress)
 	}
 	return c.Gitea.Download(ctx, r, a, w, progress)
+}
+
+// TreeFile is a file in a repository.
+type TreeFile struct {
+	Path string `json:"path"`
+	Type string `json:"type"` // blob for files
+	Size int64  `json:"size"`
+}
+
+// Tree lists the files on the default branch of repo.
+func (c *Client) Tree(ctx context.Context, repo string) ([]TreeFile, error) {
+	r, err := ParseRepo(repo)
+	if err != nil {
+		return nil, err
+	}
+	if r.Host == "" {
+		return c.GitHub.Tree(ctx, r.Path())
+	}
+	return c.Gitea.Tree(ctx, r)
+}
+
+// File returns a file from the default branch of repo, at most limit bytes.
+func (c *Client) File(ctx context.Context, repo, file string, limit int64) ([]byte, error) {
+	r, err := ParseRepo(repo)
+	if err != nil {
+		return nil, err
+	}
+	if r.Host == "" {
+		return c.GitHub.File(ctx, r.Path(), file, limit)
+	}
+	return c.Gitea.File(ctx, r, file, limit)
+}
+
+// readTree reads a git tree as GitHub, Forgejo and Gitea send it and keeps
+// the files.
+func readTree(body io.Reader, repo string) ([]TreeFile, error) {
+	var t struct {
+		Tree []TreeFile `json:"tree"`
+	}
+	if err := json.NewDecoder(body).Decode(&t); err != nil {
+		return nil, fmt.Errorf("%s: reading the file list: %w", repo, err)
+	}
+	files := t.Tree[:0]
+	for _, f := range t.Tree {
+		if f.Type == "blob" {
+			files = append(files, f)
+		}
+	}
+	return files, nil
+}
+
+func readLimited(body io.Reader, repo, file string, limit int64) ([]byte, error) {
+	data, err := io.ReadAll(io.LimitReader(body, limit+1))
+	if err != nil {
+		return nil, fmt.Errorf("%s: reading %s: %w", repo, file, err)
+	}
+	if int64(len(data)) > limit {
+		return nil, fmt.Errorf("%s: %s is too large", repo, file)
+	}
+	return data, nil
+}
+
+func escapePath(file string) string {
+	parts := strings.Split(file, "/")
+	for i, p := range parts {
+		parts[i] = url.PathEscape(p)
+	}
+	return strings.Join(parts, "/")
 }
 
 // copyBody writes a download to w, reporting progress.

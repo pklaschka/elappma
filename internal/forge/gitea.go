@@ -69,7 +69,7 @@ func (c *Gitea) get(ctx context.Context, r Repo, rawURL, accept string) (*http.R
 
 // Releases lists the newest releases of the repository, newest first.
 func (c *Gitea) Releases(ctx context.Context, r Repo) ([]Release, error) {
-	api := "https://" + r.Host + "/api/v1/repos/" + url.PathEscape(r.Owner) + "/" + url.PathEscape(r.Name) + "/releases?limit=30"
+	api := c.repoAPI(r) + "/releases?limit=30"
 	resp, err := c.get(ctx, r, api, "application/json")
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", r, err)
@@ -100,6 +100,65 @@ func (c *Gitea) Releases(ctx context.Context, r Repo) ([]Release, error) {
 		}
 	}
 	return out, nil
+}
+
+func (c *Gitea) repoAPI(r Repo) string {
+	return "https://" + r.Host + "/api/v1/repos/" + url.PathEscape(r.Owner) + "/" + url.PathEscape(r.Name)
+}
+
+// getOK is get for API calls: 404 becomes ErrNotFound, other failures an error.
+func (c *Gitea) getOK(ctx context.Context, r Repo, rawURL string) (*http.Response, error) {
+	resp, err := c.get(ctx, r, rawURL, "application/json")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", r, err)
+	}
+	if resp.StatusCode == http.StatusNotFound {
+		resp.Body.Close()
+		return nil, fmt.Errorf("%s: %w", r, ErrNotFound)
+	}
+	if resp.StatusCode >= 300 {
+		defer resp.Body.Close()
+		return nil, answered(r.Host, resp)
+	}
+	return resp, nil
+}
+
+// Tree lists the files on the default branch of the repository. Forgejo and
+// Gitea name the default branch in the repository and hand out the tree in
+// pages; the first page is plenty for finding an icon.
+func (c *Gitea) Tree(ctx context.Context, r Repo) ([]TreeFile, error) {
+	resp, err := c.getOK(ctx, r, c.repoAPI(r))
+	if err != nil {
+		return nil, err
+	}
+	var info struct {
+		DefaultBranch string `json:"default_branch"`
+		Empty         bool   `json:"empty"`
+	}
+	err = json.NewDecoder(resp.Body).Decode(&info)
+	resp.Body.Close()
+	if err != nil {
+		return nil, fmt.Errorf("%s: reading the repository: %w", r, err)
+	}
+	if info.Empty || info.DefaultBranch == "" {
+		return nil, fmt.Errorf("%s: %w", r, ErrNotFound)
+	}
+	resp, err = c.getOK(ctx, r, c.repoAPI(r)+"/git/trees/"+url.PathEscape(info.DefaultBranch)+"?recursive=true&per_page=10000")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return readTree(resp.Body, r.String())
+}
+
+// File returns a file from the default branch, at most limit bytes.
+func (c *Gitea) File(ctx context.Context, r Repo, file string, limit int64) ([]byte, error) {
+	resp, err := c.getOK(ctx, r, c.repoAPI(r)+"/raw/"+escapePath(file))
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	return readLimited(resp.Body, r.String(), file, limit)
 }
 
 // isForge asks the server for its version, which every Forgejo and Gitea
