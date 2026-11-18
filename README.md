@@ -88,6 +88,7 @@ lieferling list                         apps on the list, installed and newest v
 lieferling add <repo> [--prerelease]    put a repository on the list
 lieferling install <repo>               install (adds it to the list if needed)
 lieferling update [<repo>...]           update the given apps, or every app with an update
+lieferling open <repo>                  start the installed app
 lieferling channel <repo> stable|prerelease
 lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
 lieferling paths                        where the shared and the local files are

@@ -4,6 +4,7 @@
 //	lieferling add <repo> [--prerelease]    put a repository on the list
 //	lieferling install <repo>               install (adds it to the list if needed)
 //	lieferling update [<repo>...]           update the given apps, or every app with an update
+//	lieferling open <repo>                  start the installed app
 //	lieferling channel <repo> stable|prerelease
 //	lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
 //	lieferling paths                        where the shared and the local files are
@@ -43,7 +44,7 @@ func main() {
 var errUsage = errors.New("usage")
 
 func usage() error {
-	return fmt.Errorf("%w: lieferling list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | channel <repo> stable|prerelease | remove <repo> [--uninstall] | paths", errUsage)
+	return fmt.Errorf("%w: lieferling list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | open <repo> | channel <repo> stable|prerelease | remove <repo> [--uninstall] | paths", errUsage)
 }
 
 func run(ctx context.Context, s *store.Store, args []string, out io.Writer) error {
@@ -137,6 +138,12 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 		}
 		return nil
 
+	case "open":
+		if len(pos) != 1 {
+			return usage()
+		}
+		return s.Open(ctx, pos[0])
+
 	case "channel":
 		if len(pos) != 2 {
 			return usage()
@@ -217,6 +224,7 @@ lieferling manages apps installed from GitHub releases.
   lieferling add <repo> [--prerelease]    put a repository on the list
   lieferling install <repo>               install (adds it to the list if needed)
   lieferling update [<repo>...]           update the given apps, or every app with an update
+  lieferling open <repo>                  start the installed app
   lieferling channel <repo> stable|prerelease
   lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
   lieferling paths                        where the shared and the local files are

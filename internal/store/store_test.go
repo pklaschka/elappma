@@ -18,6 +18,7 @@ import (
 type fakeInstaller struct {
 	installed map[string]string // asset name -> file contents
 	foreign   map[string]string // app name -> version installed without Lieferling
+	opened    []string          // paths passed to Open
 }
 
 func (f *fakeInstaller) Install(_ context.Context, file, asset string) (install.Result, error) {
@@ -30,6 +31,11 @@ func (f *fakeInstaller) Install(_ context.Context, file, asset string) (install.
 }
 
 func (f *fakeInstaller) Uninstall(context.Context, string) error { return nil }
+
+func (f *fakeInstaller) Open(_ context.Context, path string) error {
+	f.opened = append(f.opened, path)
+	return nil
+}
 
 func (f *fakeInstaller) InstalledVersion(name string) (string, string) {
 	if v, ok := f.foreign[name]; ok {
@@ -131,6 +137,21 @@ func TestAddInstallUpdate(t *testing.T) {
 	list, _ = other.List(ctx)
 	if a := list[0]; a.Installed != "0.9.0" || a.ManagedByLieferling || !a.UpdateAvailable {
 		t.Errorf("other computer: %+v", a)
+	}
+
+	// opening: the copy Lieferling installed, and the one found by name
+	if err := s.Open(ctx, "me/demo"); err != nil {
+		t.Fatal(err)
+	}
+	if err := other.Open(ctx, "me/demo"); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"/Applications/Demo.app", "/Applications/Demo.app"}; strings.Join(fi.opened, ",") != strings.Join(want, ",") {
+		t.Errorf("opened %v, want %v", fi.opened, want)
+	}
+	delete(fi.foreign, "Demo")
+	if err := other.Open(ctx, "me/demo"); err != install.ErrNotInstalled {
+		t.Errorf("opening an app that is not installed: %v", err)
 	}
 
 	if err := s.Remove(ctx, "me/demo", true); err != nil {

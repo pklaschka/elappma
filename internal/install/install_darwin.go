@@ -94,6 +94,13 @@ func (m *mac) Uninstall(ctx context.Context, path string) error {
 	return m.shell(ctx, "rm -rf "+shellQuote(path), !writable(filepath.Dir(path)) || !writable(path))
 }
 
+func (m *mac) Open(ctx context.Context, path string) error {
+	if !strings.HasSuffix(path, ".app") || !exists(path) {
+		return ErrNotInstalled
+	}
+	return run(ctx, "open", path)
+}
+
 func (m *mac) InstalledVersion(name string) (string, string) {
 	if name == "" {
 		return "", ""

@@ -6,6 +6,8 @@ import type {Status} from "../bindings/github.com/pklaschka/lieferling/internal/
 const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
 
 const list = $<HTMLUListElement>("#apps");
+const loading = $<HTMLUListElement>("#loading");
+const ghostTemplate = $<HTMLTemplateElement>("#ghost");
 const empty = $<HTMLDivElement>("#empty");
 const summary = $<HTMLParagraphElement>("#summary");
 const refreshButton = $<HTMLButtonElement>("#refresh");
@@ -31,12 +33,55 @@ function plural(n: number, one: string, many: string) {
 
 // ---- list -----------------------------------------------------------------
 
+// The first load asks GitHub about every app and can take a moment. Until it
+// answers, placeholder parcels stand where the rows will be, as many as last
+// time, and they stay at least this long so the window does not flicker.
+const MIN_LOADING_MS = 700;
+const COUNT_KEY = "lieferling:count";
+let loaded = false;
+
+function showLoading() {
+  let count = 3;
+  try {
+    const saved = Number(localStorage.getItem(COUNT_KEY));
+    if (Number.isFinite(saved) && localStorage.getItem(COUNT_KEY) !== null) count = saved;
+  } catch {
+    // no storage: keep the default
+  }
+  count = Math.min(Math.max(count, 1), 6);
+  const ghosts = Array.from({length: count}, (_, i) => {
+    const li = (ghostTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLLIElement;
+    li.style.setProperty("--i", String(i));
+    return li;
+  });
+  loading.replaceChildren(...ghosts);
+  loading.hidden = false;
+  summary.textContent = "Sendungen werden abgerufen …";
+}
+
 async function load() {
   refreshButton.setAttribute("aria-busy", "true");
   refreshButton.disabled = true;
+  const first = !loaded;
+  if (first) showLoading();
+  const shown = performance.now();
   try {
-    render((await AppService.Apps()) ?? []);
+    const next = (await AppService.Apps()) ?? [];
+    if (first) {
+      await new Promise((r) => setTimeout(r, MIN_LOADING_MS - (performance.now() - shown)));
+      list.dataset.arrive = "";
+      setTimeout(() => delete list.dataset.arrive, 1200);
+    }
+    loaded = true;
+    loading.hidden = true;
+    render(next);
+    try {
+      localStorage.setItem(COUNT_KEY, String(next.length));
+    } catch {
+      // only a convenience
+    }
   } catch (err) {
+    loading.hidden = true;
     summary.textContent = `Liste nicht lesbar: ${errorText(err)}`;
   } finally {
     refreshButton.removeAttribute("aria-busy");
@@ -47,6 +92,7 @@ async function load() {
 
 function render(next: Status[]) {
   apps = next;
+  if (!loaded) return; // the placeholders stay until the first load is done
   empty.hidden = apps.length > 0;
   list.hidden = apps.length === 0;
 
@@ -101,13 +147,19 @@ function createRow(repo: string): HTMLLIElement {
     menu.hidePopover();
     const app = apps.find((a) => a.repo === li.dataset.repo);
     if (!app) return;
+    if (act === "open") open(li, app);
     if (act === "release" && app.releaseUrl) AppService.OpenURL(app.releaseUrl);
     if (act === "remove") confirmRemove(app);
     if (act === "channel") setChannel(li, app.channel !== "prerelease");
     if (act === "link") copyLink(li, app);
   });
 
-  $<HTMLButtonElement>(".action", li).addEventListener("click", () => install(li.dataset.repo!));
+  $<HTMLButtonElement>(".action", li).addEventListener("click", (e) => {
+    const app = apps.find((a) => a.repo === li.dataset.repo);
+    if ((e.currentTarget as HTMLElement).dataset.mode === "open") {
+      if (app) open(li, app);
+    } else install(li.dataset.repo!);
+  });
   return li;
 }
 
@@ -146,13 +198,18 @@ function fillRow(li: HTMLLIElement, app: Status) {
   if (state === "update") {
     action.textContent = "Aktualisieren";
     action.classList.add("express");
+  } else if (state === "current") {
+    action.textContent = "Öffnen";
   } else {
     action.textContent = "Installieren";
     action.classList.add("ink");
   }
-  action.dataset.unavailable = String(state === "failed" || state === "current");
+  action.dataset.mode = state === "current" ? "open" : "install";
+  // opening the window you are looking at does nothing
+  action.dataset.unavailable = String(state === "failed" || state === "current" && app.self);
   action.setAttribute("aria-label", `${action.textContent!.trim()}: ${app.name}`);
 
+  $<HTMLButtonElement>('[data-act="open"]', li).disabled = !app.installed || app.self;
   const releaseItem = $<HTMLButtonElement>('[data-act="release"]', li);
   releaseItem.disabled = !app.releaseUrl;
 
@@ -184,6 +241,16 @@ function setBusy(li: HTMLLIElement, on: boolean) {
 }
 
 // ---- actions --------------------------------------------------------------
+
+async function open(li: HTMLLIElement, app: Status) {
+  showRowError(li, "");
+  try {
+    await AppService.Open(app.repo);
+    flash(li, "Wird geöffnet …");
+  } catch (err) {
+    showRowError(li, errorText(err));
+  }
+}
 
 async function install(repo: string) {
   const li = list.querySelector<HTMLLIElement>(`li[data-repo="${CSS.escape(repo)}"]`);

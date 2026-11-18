@@ -64,6 +64,8 @@ type Status struct {
 	Asset               string `json:"asset"` // file that would be installed
 	UpdateAvailable     bool   `json:"updateAvailable"`
 	Error               string `json:"error"`
+	// Self marks the copy of Lieferling that is running; the app sets it.
+	Self bool `json:"self"`
 }
 
 var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
@@ -169,6 +171,31 @@ func (s *Store) Remove(ctx context.Context, repo string, uninstall bool) error {
 		}
 		return fmt.Errorf("%s is not on the list", repo)
 	})
+}
+
+// Open starts an installed app on this computer, whether Lieferling
+// installed it or found a copy installed some other way.
+func (s *Store) Open(ctx context.Context, repo string) error {
+	repo, err := NormalizeRepo(repo)
+	if err != nil {
+		return err
+	}
+	st, err := state.Load(s.StatePath)
+	if err != nil {
+		return err
+	}
+	path := ""
+	if in, ok := st.Get(repo); ok {
+		path = in.Path
+	} else if cfg, err := config.Load(s.ConfigPath); err == nil {
+		if a := cfg.Find(repo); a != nil {
+			_, path = s.Installer.InstalledVersion(a.AppName)
+		}
+	}
+	if path == "" {
+		return install.ErrNotInstalled
+	}
+	return s.Installer.Open(ctx, path)
 }
 
 // Config returns the shared configuration.
