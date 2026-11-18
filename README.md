@@ -96,6 +96,10 @@ lieferling paths                        where the shared and the local files are
 
 `<repo>` is `owner/name` or the repository's GitHub URL.
 
+The app carries the command line. Choose **Lieferling → Kommandozeilen-Tool installieren …** (or the button in the window's footer) and Lieferling links `/usr/local/bin/lieferling` to `Lieferling.app/Contents/Helpers/lieferling`; macOS asks for an administrator password. The command then updates with the app. An older `lieferling` in `/usr/local/bin`, say from a release download, is replaced only when you confirm. The same dialog removes the link again.
+
+Without the app, download `lieferling-cli-<version>-darwin-<arch>.tar.gz` from the releases and put `lieferling` on your `PATH`.
+
 ## How it picks what to install
 
 - **Release:** the newest non-draft release; on the `stable` channel release candidates (GitHub "pre-releases") are skipped.

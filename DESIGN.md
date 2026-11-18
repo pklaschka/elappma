@@ -113,7 +113,7 @@ One column of parcels on a four-row window grid: bar, add form, scrolling list, 
 
 ## Elevation & Depth
 
-Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the remove dialog.
+Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the dialogs.
 
 ## Shapes
 
@@ -129,6 +129,9 @@ One text field with the hint in the placeholder, a checkbox for prerelease, an e
 
 ### Menu
 A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
+
+### Command line dialog
+Opened from the app menu ("Kommandozeilen-Tool installieren …") or the quiet text button at the end of the footer. One dialog with four states set by `data-state`: `missing` (Abbrechen, Installieren), `other` (Behalten, Ersetzen), `linked` (Entfernen on the left, Fertig) and `unavailable` (Schließen). Below the note a dashed slip shows the link like an address: `/usr/local/bin/lieferling` on the first line, an arrow and the target in `ink-2` on the second, breaking only after a slash; once linked a delivered-green tick stands before it. The work happens with the dialog open because macOS asks for the password on top; the main button says "Wird installiert …" meanwhile. Closing the password dialog changes nothing and shows no error.
 
 ### Tracking strip (signature)
 An ordered list of three stops drawn as dots joined by legs. States come from `data-state` on the parcel: `current` (all green), `missing` (released in ink, rest pending), `update` (released in red), `failed` (strip hidden, "Kein Release erreichbar"). While installing, `data-busy` takes over: the first leg fills with download progress (`--progress`), the "Geladen" stop pulses, then the second leg half-fills during install. Motion stops under reduced motion.

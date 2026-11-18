@@ -117,16 +117,81 @@ func (m *mac) InstalledVersion(name string) (string, string) {
 // shell runs script, as administrator when admin is set: with sudo in a
 // terminal, else through the macOS password dialog.
 func (m *mac) shell(ctx context.Context, script string, admin bool) error {
+	return shell(ctx, script, admin, m.o.Interactive, "")
+}
+
+// shell runs script, as administrator when admin is set: with sudo when
+// interactive, else through the macOS password dialog, which shows prompt
+// when given.
+func shell(ctx context.Context, script string, admin, interactive bool, prompt string) error {
 	switch {
 	case !admin:
 		return run(ctx, "/bin/sh", "-c", script)
-	case m.o.Interactive:
+	case interactive:
 		cmd := exec.CommandContext(ctx, "sudo", "/bin/sh", "-c", script)
 		cmd.Stdin, cmd.Stdout, cmd.Stderr = os.Stdin, os.Stdout, os.Stderr
 		return cmd.Run()
 	default:
-		as := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(script)
-		return run(ctx, "osascript", "-e", `do shell script "`+as+`" with administrator privileges`)
+		esc := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace
+		as := `do shell script "` + esc(script) + `" with administrator privileges`
+		if prompt != "" {
+			as += ` with prompt "` + esc(prompt) + `"`
+		}
+		err := run(ctx, "osascript", "-e", as)
+		if err != nil && strings.Contains(err.Error(), "(-128)") {
+			return ErrCanceled
+		}
+		return err
+	}
+}
+
+// LinkCommand puts a symbolic link to the command line in this app bundle
+// (bundled, see BundledCommand) at path, replacing whatever is there unless
+// it is a folder. It asks for an administrator password when the folder is
+// not writable, as /usr/local/bin usually is not.
+func LinkCommand(ctx context.Context, bundled, path string, interactive bool) error {
+	if bundled == "" {
+		return ErrNoCommand
+	}
+	if st, err := os.Lstat(path); err == nil && st.IsDir() {
+		return fmt.Errorf("%s is a folder", path)
+	}
+	dir := filepath.Dir(path)
+	script := fmt.Sprintf("mkdir -p %[1]s && rm -f %[2]s && ln -s %[3]s %[2]s",
+		shellQuote(dir), shellQuote(path), shellQuote(bundled))
+	prompt := fmt.Sprintf("Lieferling möchte den Befehl lieferling in %s anlegen.", dir)
+	return shell(ctx, script, !creatable(dir), interactive, prompt)
+}
+
+// UnlinkCommand removes the link at path, but only when it is a symbolic
+// link: a copy someone put there by hand stays.
+func UnlinkCommand(ctx context.Context, path string, interactive bool) error {
+	st, err := os.Lstat(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	if st.Mode()&os.ModeSymlink == 0 {
+		return fmt.Errorf("%s is not a link Lieferling made: remove it yourself", path)
+	}
+	prompt := fmt.Sprintf("Lieferling möchte den Befehl lieferling aus %s entfernen.", filepath.Dir(path))
+	return shell(ctx, "rm -f "+shellQuote(path), !writable(filepath.Dir(path)), interactive, prompt)
+}
+
+// creatable reports whether dir can be made or written to without an
+// administrator: the nearest folder that exists decides.
+func creatable(dir string) bool {
+	for {
+		if _, err := os.Stat(dir); err == nil {
+			return writable(dir)
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			return false
+		}
+		dir = parent
 	}
 }
 

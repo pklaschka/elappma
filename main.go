@@ -58,9 +58,22 @@ func main() {
 
 	// The default menu's Help > Learn More loads wails.io into the window;
 	// build the menu ourselves with a help item that opens the README.
+	// The app menu is the standard one plus the command line item.
 	appMenu := app.NewMenu()
+	var commandItem *application.MenuItem
 	if runtime.GOOS == "darwin" {
-		appMenu.AddRole(application.AppMenu)
+		m := appMenu.AddSubmenu("Lieferling")
+		m.AddRole(application.About)
+		m.AddSeparator()
+		commandItem = m.Add("Kommandozeilen-Tool installieren …")
+		m.AddSeparator()
+		m.AddRole(application.ServicesMenu)
+		m.AddSeparator()
+		m.AddRole(application.Hide)
+		m.AddRole(application.HideOthers)
+		m.AddRole(application.UnHide)
+		m.AddSeparator()
+		m.AddRole(application.Quit)
 	}
 	appMenu.AddRole(application.EditMenu)
 	appMenu.AddRole(application.WindowMenu)
@@ -91,6 +104,14 @@ func main() {
 	show := func() {
 		window.Show()
 		window.Focus()
+	}
+
+	if commandItem != nil {
+		// the window shows what is set up and does the work
+		commandItem.OnClick(func(*application.Context) {
+			show()
+			app.Event.Emit("command:open")
+		})
 	}
 
 	svc.relaunch = func() {
