@@ -121,7 +121,7 @@ code, .path { font-family: var(--mono); font-size: 0.9em; user-select: text; }
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
-  min-block-size: 30px;
+  min-block-size: 32px;
   padding: 0.25rem 0.8rem;
   border: 1px solid var(--cut);
   border-radius: var(--radius);
@@ -180,12 +180,13 @@ input[type="text"][aria-invalid="true"] { border-color: var(--express); }
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.25rem 0.75rem;
-  padding: 0.75rem 1rem 0.5rem;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
   background: var(--well);
   border-block-end: 1px solid var(--cut);
 }
-.field-error { flex-basis: 100%; min-block-size: 1.3em; margin: 0; color: var(--express); font-size: var(--step--1); }
+.field-error:empty { display: none; }
+.field-error { flex-basis: 100%; margin: 0; color: var(--express); font-size: var(--step--1); }
 
 main { display: contents; }
 main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
@@ -207,7 +208,7 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
   grid-template-columns: subgrid;
   align-items: center;
   row-gap: 0.375rem;
-  padding: 1rem 0.25rem;
+  padding-block: 1rem;
   border-block-end: 1px dashed var(--cut);
 }
 
@@ -323,7 +324,7 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
 .parcel[data-state="failed"] .route,
 .parcel[data-state="failed"] .installed,
 .parcel[data-state="failed"] .arrow { display: none; }
-.parcel[data-state="failed"] .latest { color: var(--ink-2); font-family: system-ui, -apple-system, sans-serif; font-weight: 400; letter-spacing: 0; }
+.parcel[data-state="failed"] .latest { color: var(--ink-2); font-family: system-ui, -apple-system, sans-serif; font-size: var(--step-0); font-weight: 400; letter-spacing: 0; }
 
 .problem {
   grid-column: 1 / -1;
@@ -343,9 +344,15 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
 /* ---- Row menu ----------------------------------------------------------- */
 
 .menu {
+  /* WebKit's popover sheet stretches the box (inset: 0); pin every edge and
+     the height ourselves, the script sets top or bottom and right. */
   position: fixed;
   inset: auto;
   margin: 0;
+  block-size: fit-content;
+  max-block-size: calc(100vh - 1rem);
+  overflow-y: auto;
+  align-content: start;
   min-inline-size: 14rem;
   padding: 0.3rem;
   border: 1px solid var(--cut);

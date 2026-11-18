@@ -83,8 +83,16 @@ function createRow(repo: string): HTMLLIElement {
   menu.addEventListener("beforetoggle", (e) => {
     if ((e as ToggleEvent).newState !== "open") return;
     const r = more.getBoundingClientRect();
-    menu.style.top = `${r.bottom + 4}px`;
-    menu.style.right = `${document.documentElement.clientWidth - r.right}px`;
+    const {clientWidth, clientHeight} = document.documentElement;
+    // below the button, or above it when the window is too short there
+    const space = clientHeight - r.bottom;
+    const below = space >= 180 || space >= r.top;
+    Object.assign(menu.style, {
+      top: below ? `${r.bottom + 4}px` : "auto",
+      bottom: below ? "auto" : `${clientHeight - r.top + 4}px`,
+      left: "auto",
+      right: `${clientWidth - r.right}px`,
+    });
   });
   menu.addEventListener("click", (e) => {
     const act = (e.target as HTMLElement).closest<HTMLButtonElement>("button")?.dataset.act;
