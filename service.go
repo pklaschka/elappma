@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"encoding/base64"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -9,6 +11,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/pklaschka/lieferling/internal/deeplink"
+	"github.com/pklaschka/lieferling/internal/icon"
 	"github.com/pklaschka/lieferling/internal/install"
 	"github.com/pklaschka/lieferling/internal/pick"
 	"github.com/pklaschka/lieferling/internal/store"
@@ -149,6 +152,18 @@ func (s *AppService) Open(ctx context.Context, repo string) error {
 		return translate(err)
 	}
 	return nil
+}
+
+// Icon returns the app's icon as a data URL, or "" when it has none.
+func (s *AppService) Icon(ctx context.Context, repo string) (string, error) {
+	ic, err := s.store.Icon(ctx, repo)
+	if errors.Is(err, icon.ErrNone) {
+		return "", nil
+	}
+	if err != nil {
+		return "", translate(err)
+	}
+	return "data:" + ic.MIME + ";base64," + base64.StdEncoding.EncodeToString(ic.Data), nil
 }
 
 // OpenURL opens a release page in the browser.

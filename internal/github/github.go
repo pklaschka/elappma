@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"os/exec"
 	"runtime"
@@ -105,6 +106,58 @@ func (c *Client) Releases(ctx context.Context, repo string) ([]Release, error) {
 		return nil, fmt.Errorf("%s: reading releases: %w", repo, err)
 	}
 	return releases, nil
+}
+
+// TreeFile is a file in a repository.
+type TreeFile struct {
+	Path string `json:"path"`
+	Type string `json:"type"` // blob for files
+	Size int64  `json:"size"`
+}
+
+// Tree lists the files on the default branch of owner/repo (GitHub cuts very
+// large trees short, which is fine for finding an icon).
+func (c *Client) Tree(ctx context.Context, repo string) ([]TreeFile, error) {
+	resp, err := c.request(ctx, c.base()+"/repos/"+repo+"/git/trees/HEAD?recursive=1", "application/vnd.github+json")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", repo, err)
+	}
+	defer resp.Body.Close()
+	var body struct {
+		Tree []TreeFile `json:"tree"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		return nil, fmt.Errorf("%s: reading the file list: %w", repo, err)
+	}
+	files := body.Tree[:0]
+	for _, f := range body.Tree {
+		if f.Type == "blob" {
+			files = append(files, f)
+		}
+	}
+	return files, nil
+}
+
+// File returns a file from the default branch of owner/repo, at most limit
+// bytes; it works for private repositories with a token, too.
+func (c *Client) File(ctx context.Context, repo, file string, limit int64) ([]byte, error) {
+	parts := strings.Split(file, "/")
+	for i, p := range parts {
+		parts[i] = url.PathEscape(p)
+	}
+	resp, err := c.request(ctx, c.base()+"/repos/"+repo+"/contents/"+strings.Join(parts, "/"), "application/vnd.github.raw+json")
+	if err != nil {
+		return nil, fmt.Errorf("%s: %w", repo, err)
+	}
+	defer resp.Body.Close()
+	data, err := io.ReadAll(io.LimitReader(resp.Body, limit+1))
+	if err != nil {
+		return nil, fmt.Errorf("%s: reading %s: %w", repo, file, err)
+	}
+	if int64(len(data)) > limit {
+		return nil, fmt.Errorf("%s: %s is too large", repo, file)
+	}
+	return data, nil
 }
 
 // Download writes the asset to w. progress, if set, is called as bytes arrive.
