@@ -1,60 +1,108 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
-    <meta charset="UTF-8"/>
-    <link rel="icon" type="image/svg+xml" href="/wails.png"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
-    <link rel="stylesheet" href="/style.css"/>
-    <title>Wails App</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light dark">
+  <title>Elappma</title>
+  <link rel="stylesheet" href="/src/style.css">
 </head>
 <body>
-<!-- Fixed full-bleed background layer (avoids background-attachment:fixed, which
-     is broken in iOS WKWebView). The image swaps to a portrait crop on mobile. -->
-<div class="bg" aria-hidden="true"></div>
+  <svg class="sprite" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3"/></symbol>
+    <symbol id="i-more" viewBox="0 0 16 16"><path d="M3.5 8h.01M8 8h.01M12.5 8h.01"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9.5 4.5 13 8l-3.5 3.5"/></symbol>
+    <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.5 14 13H2zM8 6.5v3M8 11.5h.01"/></symbol>
+  </svg>
 
-<main class="container">
-    <header class="brand">
-        <a class="brand-mark" data-wml-openURL="https://v3.wails.io" aria-label="Wails website">
-            <img src="/wails.png" class="brand-logo" alt="Wails logo"/>
-        </a>
-        <a class="brand-badge" data-wml-openURL="https://www.typescriptlang.org/" aria-label="TypeScript">
-            <img src="/typescript.svg" alt="TypeScript logo"/>
-        </a>
-    </header>
-
-    <h1 class="title"><span class="title-accent">Wails +</span> <span class="title-name"><span class="title-name-text">TypeScript</span></span></h1>
-    <p class="subtitle">Build beautiful cross-platform apps with Go and TypeScript.</p>
-
-    <div class="greet">
-        <div class="input-box" id="input">
-            <svg class="input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <input aria-label="input" class="input" id="name" type="text" placeholder="Your name" autocomplete="off"/>
-            <button aria-label="greet-btn" id="greet" class="btn">Greet
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-            </button>
-        </div>
+  <header class="bar">
+    <div class="bar-title">
+      <h1>Elappma</h1>
+      <p id="summary" class="summary" aria-live="polite"></p>
     </div>
-</main>
+    <div class="bar-actions">
+      <button type="button" id="refresh" class="button quiet" aria-describedby="summary">
+        <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
+        Prüfen
+      </button>
+      <button type="button" id="update-all" class="button primary" hidden>Alle aktualisieren</button>
+    </div>
+  </header>
 
-<hr class="footer-divider"/>
-<footer class="footer">
-    <span class="footer-version"><span id="version">v3</span></span>
-    <span class="footer-time">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        <span id="time">Listening for Time event...</span>
-    </span>
-    <a class="footer-docs" data-wml-openURL="https://v3.wails.io" aria-label="Wails documentation">Docs
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>
-    </a>
-</footer>
+  <main>
+    <form id="add" class="add" novalidate>
+      <label for="repo" class="add-label">Repository hinzufügen</label>
+      <div class="add-row">
+        <input id="repo" name="repo" type="text" required autocomplete="off" autocapitalize="off" spellcheck="false"
+               placeholder="owner/name oder GitHub-URL" aria-describedby="add-error"
+               pattern="\s*(https?://)?(www\.)?(github\.com[/:])?[\w.\-]+/[\w.\-]+.*">
+        <label class="check"><input type="checkbox" name="prerelease"> Vorabversionen</label>
+        <button type="submit" class="button">
+          <svg class="icon" aria-hidden="true"><use href="#i-plus"/></svg>
+          Hinzufügen
+        </button>
+      </div>
+      <p id="add-error" class="field-error" role="alert"></p>
+    </form>
 
-<!-- Toast: shows the greeting returned by the Go backend (overlay, so it never
-     reflows the layout). -->
-<div class="toast" id="toast" role="status" aria-live="polite">
-    <span class="toast-label">From Go</span>
-    <span aria-label="result" class="toast-msg" id="result"></span>
-</div>
+    <section aria-labelledby="apps-heading">
+      <h2 id="apps-heading" class="visually-hidden">Apps</h2>
+      <ul id="apps" class="shelf" aria-busy="true"></ul>
+      <div id="empty" class="empty" hidden>
+        <p class="empty-title">Noch keine Apps</p>
+        <p>Füge oben ein GitHub-Repository hinzu, dessen Releases eine App enthalten, zum Beispiel <code>pklaschka/feldspur</code>. Die Liste gilt auf all deinen Macs.</p>
+      </div>
+    </section>
+  </main>
 
-<script type="module" src="/src/main.js"></script>
+  <footer class="foot">
+    <span>Liste: <span id="config-path" class="path"></span></span>
+  </footer>
+
+  <template id="row">
+    <li class="app">
+      <div class="app-name">
+        <span class="name"></span>
+        <span class="repo"></span>
+      </div>
+      <div class="app-version">
+        <span class="installed"></span>
+        <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
+        <span class="latest"></span>
+      </div>
+      <label class="check channel"><input type="checkbox"> Vorab</label>
+      <div class="app-action">
+        <button type="button" class="button action"></button>
+        <progress max="1" hidden></progress>
+      </div>
+      <button type="button" class="button icon-only more" aria-haspopup="menu">
+        <svg class="icon" aria-hidden="true"><use href="#i-more"/></svg>
+      </button>
+      <div class="menu" popover role="menu">
+        <button type="button" role="menuitem" data-act="release">Release auf GitHub</button>
+        <button type="button" role="menuitem" data-act="remove" class="danger">Entfernen …</button>
+      </div>
+      <p class="app-error" hidden>
+        <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
+        <span></span>
+      </p>
+    </li>
+  </template>
+
+  <dialog id="confirm-remove" aria-labelledby="remove-title">
+    <form method="dialog">
+      <h2 id="remove-title"></h2>
+      <p>Auf deinen anderen Macs bleibt die App installiert, nur die Liste ändert sich überall.</p>
+      <label class="check"><input type="checkbox" name="uninstall"> Auch von diesem Mac löschen</label>
+      <div class="dialog-actions">
+        <button value="cancel" class="button" autofocus>Behalten</button>
+        <button value="remove" class="button danger">Entfernen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
