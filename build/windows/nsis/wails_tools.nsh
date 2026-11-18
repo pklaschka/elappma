@@ -8,7 +8,7 @@
     !define INFO_PROJECTNAME "Elappma"
 !endif
 !ifndef INFO_COMPANYNAME
-    !define INFO_COMPANYNAME "Zuri Klaschka"
+    !define INFO_COMPANYNAME "Zuri Nimca Klaschka"
 !endif
 !ifndef INFO_PRODUCTNAME
     !define INFO_PRODUCTNAME "Elappma"
@@ -17,7 +17,7 @@
     !define INFO_PRODUCTVERSION "0.0.1"
 !endif
 !ifndef INFO_COPYRIGHT
-    !define INFO_COPYRIGHT "(c) 2026, Zuri Klaschka"
+    !define INFO_COPYRIGHT "(c) 2026, Zuri Nimca Klaschka"
 !endif
 !ifndef PRODUCT_EXECUTABLE
     !define PRODUCT_EXECUTABLE "${INFO_PROJECTNAME}.exe"

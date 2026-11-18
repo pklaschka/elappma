@@ -5,11 +5,11 @@ version: '3'
 
 # This information is used to generate the build assets.
 info:
-  companyName: "Zuri Klaschka" # The name of the company
+  companyName: "Zuri Nimca Klaschka" # The name of the company
   productName: "Elappma" # The name of the application
   productIdentifier: "de.pklaschka.elappma" # The unique product identifier
   description: "Installs and updates apps from GitHub releases" # The application description
-  copyright: "(c) 2026, Zuri Klaschka" # Copyright text
+  copyright: "(c) 2026, Zuri Nimca Klaschka" # Copyright text
   comments: "" # Comments
   version: "0.0.1" # The application version
   # cfBundleIconName: "appicon" # The macOS icon name in Assets.car icon bundles (optional)
