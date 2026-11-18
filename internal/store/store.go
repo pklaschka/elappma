@@ -24,6 +24,7 @@ import (
 type Store struct {
 	ConfigPath string
 	StatePath  string
+	CacheDir   string // icons; "" keeps nothing between calls
 	GitHub     *github.Client
 	Installer  install.Installer
 	GOOS       string
@@ -40,6 +41,7 @@ func New() *Store {
 	return &Store{
 		ConfigPath: cfg,
 		StatePath:  st,
+		CacheDir:   cacheDir(),
 		GitHub:     github.New(),
 		Installer:  install.New(install.DefaultOptions()),
 		GOOS:       runtime.GOOS,
@@ -184,18 +186,26 @@ func (s *Store) Open(ctx context.Context, repo string) error {
 	if err != nil {
 		return err
 	}
-	path := ""
-	if in, ok := st.Get(repo); ok {
-		path = in.Path
-	} else if cfg, err := config.Load(s.ConfigPath); err == nil {
-		if a := cfg.Find(repo); a != nil {
-			_, path = s.Installer.InstalledVersion(a.AppName)
-		}
-	}
+	path := s.installedPath(repo, st)
 	if path == "" {
 		return install.ErrNotInstalled
 	}
 	return s.Installer.Open(ctx, path)
+}
+
+// installedPath is where repo's app is installed on this computer, by
+// Lieferling or otherwise, or "".
+func (s *Store) installedPath(repo string, st state.State) string {
+	if in, ok := st.Get(repo); ok {
+		return in.Path
+	}
+	if cfg, err := config.Load(s.ConfigPath); err == nil {
+		if a := cfg.Find(repo); a != nil {
+			_, path := s.Installer.InstalledVersion(a.AppName)
+			return path
+		}
+	}
+	return ""
 }
 
 // Config returns the shared configuration.

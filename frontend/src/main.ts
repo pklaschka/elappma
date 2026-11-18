@@ -185,6 +185,7 @@ function fillRow(li: HTMLLIElement, app: Status) {
     !app.installed ? "missing" : app.updateAvailable ? "update" : "current";
   li.dataset.state = state;
   $(".name", li).textContent = app.name;
+  showIcon(li, app);
   $(".repo", li).textContent = app.repo;
   $(".installed", li).textContent = app.installed || "–";
   $(".latest", li).textContent = app.latest || "Kein Release erreichbar";
@@ -221,6 +222,42 @@ function fillRow(li: HTMLLIElement, app: Status) {
 
   showRowError(li, app.error);
   setBusy(li, busy.has(app.repo));
+}
+
+// Icons come from the installed bundle or the repository and can take a
+// moment; the stamp field with the initial stands in until then, and for
+// good when an app has none. Asking again only when the app was installed,
+// moved or removed keeps refreshes free.
+const icons = new Map<string, Promise<string>>();
+
+function showIcon(li: HTMLLIElement, app: Status) {
+  const initial = $<HTMLSpanElement>(".initial", li);
+  initial.textContent = Array.from(app.name.trim())[0]?.toLocaleUpperCase("de") ?? "?";
+  const key = `${app.repo}\n${app.path}`;
+  if (li.dataset.icon === key) return;
+  li.dataset.icon = key;
+  let url = icons.get(key);
+  if (!url) {
+    url = AppService.Icon(app.repo).catch(() => "");
+    icons.set(key, url);
+  }
+  url.then((src) => {
+    if (li.dataset.icon !== key) return; // the app changed meanwhile
+    const stamp = $<HTMLSpanElement>(".stamp", li);
+    const shown = stamp.querySelector("img");
+    if (shown?.getAttribute("src") === src) return;
+    shown?.remove();
+    delete li.dataset.hasIcon;
+    if (!src) return;
+    // created only once there is a source, so no empty image is ever shown
+    const img = new Image(36, 36);
+    img.alt = "";
+    img.decoding = "async";
+    img.onload = () => (li.dataset.hasIcon = "");
+    img.onerror = () => img.remove();
+    img.src = src;
+    stamp.append(img);
+  });
 }
 
 function showRowError(li: HTMLLIElement, message: string) {
