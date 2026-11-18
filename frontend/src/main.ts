@@ -55,7 +55,7 @@ function render(next: Status[]) {
   updateAllButton.hidden = updates.length < 2;
 
   const rows = new Map<string, HTMLLIElement>();
-  for (const li of list.querySelectorAll<HTMLLIElement>("li.app")) rows.set(li.dataset.repo!, li);
+  for (const li of list.querySelectorAll<HTMLLIElement>("li.parcel")) rows.set(li.dataset.repo!, li);
   const order: HTMLLIElement[] = [];
   for (const app of apps) {
     const li = rows.get(app.repo) ?? createRow(app.repo);
@@ -93,52 +93,53 @@ function createRow(repo: string): HTMLLIElement {
     if (!app) return;
     if (act === "release" && app.releaseUrl) AppService.OpenURL(app.releaseUrl);
     if (act === "remove") confirmRemove(app);
+    if (act === "channel") setChannel(li, app.channel !== "prerelease");
   });
 
   $<HTMLButtonElement>(".action", li).addEventListener("click", () => install(li.dataset.repo!));
-  $<HTMLInputElement>(".channel input", li).addEventListener("change", async (e) => {
-    const box = e.target as HTMLInputElement;
-    box.disabled = true;
-    try {
-      await AppService.SetChannel(li.dataset.repo!, box.checked);
-    } catch (err) {
-      box.checked = !box.checked;
-      showRowError(li, errorText(err));
-    } finally {
-      box.disabled = false;
-    }
-  });
   return li;
 }
 
+async function setChannel(li: HTMLLIElement, prerelease: boolean) {
+  const item = $<HTMLButtonElement>('[data-act="channel"]', li);
+  item.setAttribute("aria-checked", String(prerelease));
+  try {
+    await AppService.SetChannel(li.dataset.repo!, prerelease);
+  } catch (err) {
+    item.setAttribute("aria-checked", String(!prerelease));
+    showRowError(li, errorText(err));
+  }
+}
+
 function fillRow(li: HTMLLIElement, app: Status) {
-  const state = !app.installed ? "missing" : app.updateAvailable ? "update" : "current";
+  const state = app.error && !app.latest ? "failed" :
+    !app.installed ? "missing" : app.updateAvailable ? "update" : "current";
   li.dataset.state = state;
   $(".name", li).textContent = app.name;
   $(".repo", li).textContent = app.repo;
   $(".installed", li).textContent = app.installed || "–";
-  $(".latest", li).textContent = app.latest || "–";
-  const versionLabel = state === "update" ? `Installiert ${app.installed}, neu ${app.latest}` :
-    state === "current" ? `Installiert ${app.installed}` : app.latest ? `Neueste Version ${app.latest}` : "";
-  $(".app-version", li).setAttribute("aria-label", versionLabel);
-
-  const channel = $<HTMLInputElement>(".channel input", li);
-  channel.checked = app.channel === "prerelease";
-  channel.setAttribute("aria-label", `Vorabversionen für ${app.name}`);
+  $(".latest", li).textContent = app.latest || "Kein Release erreichbar";
+  $<HTMLElement>(".channel-tag", li).hidden = app.channel !== "prerelease";
+  $('[data-act="channel"]', li).setAttribute("aria-checked", String(app.channel === "prerelease"));
+  const route = $<HTMLOListElement>(".route", li);
+  route.setAttribute("aria-label", {
+    update: `Version ${app.latest} ist erschienen, installiert ist ${app.installed}`,
+    current: `Version ${app.installed} ist installiert`,
+    missing: `Version ${app.latest} ist erschienen, auf diesem Mac nicht installiert`,
+    failed: "Kein Release gefunden",
+  }[state]);
 
   const action = $<HTMLButtonElement>(".action", li);
   action.className = "button action";
   action.disabled = false;
-  if (state === "missing") {
-    action.textContent = "Installieren";
-  } else if (state === "update") {
+  if (state === "update") {
     action.textContent = "Aktualisieren";
-    action.classList.add("primary");
+    action.classList.add("express");
   } else {
-    action.innerHTML = `<svg class="icon" aria-hidden="true"><use href="#i-check"/></svg> Aktuell`;
-    action.disabled = true;
+    action.textContent = "Installieren";
+    action.classList.add("ink");
   }
-  action.dataset.unavailable = String(Boolean(app.error && !app.latest));
+  action.dataset.unavailable = String(state === "failed" || state === "current");
   action.setAttribute("aria-label", `${action.textContent!.trim()}: ${app.name}`);
 
   const releaseItem = $<HTMLButtonElement>('[data-act="release"]', li);
@@ -149,21 +150,25 @@ function fillRow(li: HTMLLIElement, app: Status) {
 }
 
 function showRowError(li: HTMLLIElement, message: string) {
-  const el = $<HTMLParagraphElement>(".app-error", li);
+  const el = $<HTMLParagraphElement>(".problem", li);
   el.hidden = !message;
   $("span", el).textContent = message;
 }
 
 function setBusy(li: HTMLLIElement, on: boolean) {
-  const progress = $<HTMLProgressElement>("progress", li);
   const action = $<HTMLButtonElement>(".action", li);
-  if (on) action.hidden = true;
-  else action.hidden = action.dataset.unavailable === "true";
-  progress.hidden = !on;
+  action.hidden = on || action.dataset.unavailable === "true";
+  const route = $<HTMLOListElement>(".route", li);
+  const status = $<HTMLSpanElement>(".status", li);
+  status.hidden = !on;
   if (on) {
-    progress.setAttribute("aria-label", `${li.dataset.repo} wird geladen`);
+    li.dataset.busy ??= "download";
+    route.setAttribute("aria-busy", "true");
+    status.textContent = li.dataset.busy === "install" ? "Wird installiert …" : "Wird geladen …";
   } else {
-    progress.removeAttribute("value"); // back to indeterminate for next time
+    delete li.dataset.busy;
+    route.style.removeProperty("--progress");
+    route.removeAttribute("aria-busy");
   }
 }
 
@@ -189,7 +194,9 @@ Events.On("install:progress", (ev) => {
   const {repo, done, total} = ev.data;
   const li = list.querySelector<HTMLLIElement>(`li[data-repo="${CSS.escape(repo)}"]`);
   if (!li || total <= 0) return;
-  $<HTMLProgressElement>("progress", li).value = done / total;
+  $<HTMLOListElement>(".route", li).style.setProperty("--progress", String(done / total));
+  li.dataset.busy = done >= total ? "install" : "download";
+  $(".status", li).textContent = done >= total ? "Wird installiert …" : `Wird geladen … ${Math.round((done / total) * 100)} %`;
 });
 
 Events.On("apps:changed", (ev) => render(ev.data ?? []));
