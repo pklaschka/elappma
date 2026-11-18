@@ -44,6 +44,20 @@ func main() {
 	})
 	svc.app = app
 
+	// The default menu's Help > Learn More loads wails.io into the window;
+	// build the menu ourselves with a help item that opens the README.
+	appMenu := app.NewMenu()
+	if runtime.GOOS == "darwin" {
+		appMenu.AddRole(application.AppMenu)
+	}
+	appMenu.AddRole(application.EditMenu)
+	appMenu.AddRole(application.WindowMenu)
+	help := appMenu.AddSubmenu("Hilfe")
+	help.Add("Elappma auf GitHub").OnClick(func(*application.Context) {
+		_ = app.Browser.OpenURL("https://github.com/pklaschka/elappma#readme")
+	})
+	app.Menu.SetApplicationMenu(appMenu)
+
 	window := app.Window.NewWithOptions(application.WebviewWindowOptions{
 		Name:      "main",
 		Title:     "Elappma",
