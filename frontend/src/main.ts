@@ -235,25 +235,22 @@ function showIcon(li: HTMLLIElement, app: Status) {
     url = AppService.Icon(app.repo).catch(() => "");
     icons.set(key, url);
   }
-  const img = $<HTMLImageElement>(".stamp img", li);
   url.then((src) => {
     if (li.dataset.icon !== key) return; // the app changed meanwhile
-    if (!src) {
-      img.hidden = true;
-      img.removeAttribute("src");
-      delete li.dataset.hasIcon;
-      return;
-    }
-    img.onload = () => {
-      img.hidden = false;
-      li.dataset.hasIcon = "";
-    };
-    img.onerror = () => {
-      img.hidden = true;
-      delete li.dataset.hasIcon;
-    };
-    if (img.getAttribute("src") === src && img.complete && img.naturalWidth > 0) img.onload(new Event("load"));
-    else img.src = src;
+    const stamp = $<HTMLSpanElement>(".stamp", li);
+    const shown = stamp.querySelector("img");
+    if (shown?.getAttribute("src") === src) return;
+    shown?.remove();
+    delete li.dataset.hasIcon;
+    if (!src) return;
+    // created only once there is a source, so no empty image is ever shown
+    const img = new Image(36, 36);
+    img.alt = "";
+    img.decoding = "async";
+    img.onload = () => (li.dataset.hasIcon = "");
+    img.onerror = () => img.remove();
+    img.src = src;
+    stamp.append(img);
   });
 }
 
