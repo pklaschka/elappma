@@ -109,3 +109,7 @@ With squash merges the PR title is the commit message, so put the marker there.
 | `site/` | the landing page for README links (GitHub Pages) |
 | `cmd/elappma` | the command line |
 | `main.go`, `service.go`, `frontend/` | the Wails app |
+
+## License
+
+Copyright (c) 2026 Zuri Klaschka. Licensed under the [European Union Public Licence v. 1.2](LICENSE) (EUPL-1.2).
