@@ -1,13 +1,13 @@
 [Desktop Entry]
 Version=1.0
-Name=My Product
-Comment=A elappma application
+Name=Elappma
+Comment=Installs and updates apps from GitHub releases
 # The Exec line includes %u to pass the URL to the application
-Exec=/usr/local/bin/elappma %u
+Exec=/usr/local/bin/Elappma %u
 Terminal=false
 Type=Application
-Icon=elappma
+Icon=Elappma
 Categories=Utility;
-StartupWMClass=elappma
+StartupWMClass=Elappma
 
  

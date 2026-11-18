@@ -21,7 +21,7 @@ func New(o Options) Installer {
 
 type mac struct{ o Options }
 
-// Install does what scripts/install-macos.sh does: take the .app out of the
+// Install does what the original install-macos.sh did: take the .app out of the
 // DMG or ZIP, quit the running copy, replace the old one and clear the
 // quarantine flag so macOS opens the unsigned app.
 func (m *mac) Install(ctx context.Context, file, assetName string) (Result, error) {

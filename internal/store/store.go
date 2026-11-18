@@ -53,14 +53,14 @@ type Status struct {
 	Path      string `json:"path"`
 	// ManagedByElappma is false for a copy installed some other way (found
 	// through the app name another computer recorded).
-	ManagedByElappma  bool   `json:"managedByElappma"`
-	Latest          string `json:"latest"` // newest version in the channel
-	LatestTag       string `json:"latestTag"`
-	PublishedAt     string `json:"publishedAt"`
-	ReleaseURL      string `json:"releaseUrl"`
-	Asset           string `json:"asset"` // file that would be installed
-	UpdateAvailable bool   `json:"updateAvailable"`
-	Error           string `json:"error"`
+	ManagedByElappma bool   `json:"managedByElappma"`
+	Latest           string `json:"latest"` // newest version in the channel
+	LatestTag        string `json:"latestTag"`
+	PublishedAt      string `json:"publishedAt"`
+	ReleaseURL       string `json:"releaseUrl"`
+	Asset            string `json:"asset"` // file that would be installed
+	UpdateAvailable  bool   `json:"updateAvailable"`
+	Error            string `json:"error"`
 }
 
 var repoPattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$`)
