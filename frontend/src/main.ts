@@ -2,7 +2,7 @@ import {Clipboard, Events} from "@wailsio/runtime";
 import {AppService} from "../bindings/github.com/pklaschka/lieferling";
 import {type Command, CommandState} from "../bindings/github.com/pklaschka/lieferling/internal/install/models";
 import type {Link} from "../bindings/github.com/pklaschka/lieferling/internal/deeplink/models";
-import type {Status} from "../bindings/github.com/pklaschka/lieferling/internal/store/models";
+import type {ImportItem, ImportPlan, Status} from "../bindings/github.com/pklaschka/lieferling/internal/store/models";
 
 const $ = <T extends Element>(sel: string, root: ParentNode = document) => root.querySelector(sel) as T;
 
@@ -21,6 +21,7 @@ const removeDialog = $<HTMLDialogElement>("#confirm-remove");
 const linkDialog = $<HTMLDialogElement>("#confirm-link");
 
 let apps: Status[] = [];
+let noting = false; // the bar shows a passing note instead of the summary
 const busy = new Set<string>(); // repos being installed right now
 
 function errorText(err: unknown): string {
@@ -98,7 +99,7 @@ function render(next: Status[]) {
   list.hidden = apps.length === 0;
 
   const updates = apps.filter((a) => a.updateAvailable);
-  summary.textContent = apps.length === 0 ? "" :
+  if (!noting) summary.textContent = apps.length === 0 ? "" :
     updates.length === 0 ? `${plural(apps.length, "App", "Apps")}, alle aktuell` :
       `${plural(apps.length, "App", "Apps")}, ${plural(updates.length, "Update", "Updates")}`;
   updateAllButton.hidden = updates.length < 2;
@@ -118,20 +119,12 @@ function render(next: Status[]) {
 
 let rowCount = 0;
 
-function createRow(repo: string): HTMLLIElement {
-  const li = (rowTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLLIElement;
-  li.dataset.repo = repo;
-  const id = `menu-${++rowCount}`;
-  const menu = $<HTMLDivElement>(".menu", li);
-  const more = $<HTMLButtonElement>(".more", li);
-  menu.id = id;
-  more.setAttribute("popovertarget", id);
-  more.setAttribute("aria-label", `Mehr zu ${repo}`);
-
-  // place the menu under its button (anchor positioning is not in every WebKit yet)
+// placeUnder keeps a popover menu under its button, right-aligned (anchor
+// positioning is not in every WebKit yet).
+function placeUnder(menu: HTMLElement, button: HTMLElement) {
   menu.addEventListener("beforetoggle", (e) => {
     if ((e as ToggleEvent).newState !== "open") return;
-    const r = more.getBoundingClientRect();
+    const r = button.getBoundingClientRect();
     const {clientWidth, clientHeight} = document.documentElement;
     // below the button, or above it when the window is too short there
     const space = clientHeight - r.bottom;
@@ -143,6 +136,19 @@ function createRow(repo: string): HTMLLIElement {
       right: `${clientWidth - r.right}px`,
     });
   });
+}
+
+function createRow(repo: string): HTMLLIElement {
+  const li = (rowTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLLIElement;
+  li.dataset.repo = repo;
+  const id = `menu-${++rowCount}`;
+  const menu = $<HTMLDivElement>(".menu", li);
+  const more = $<HTMLButtonElement>(".more", li);
+  menu.id = id;
+  more.setAttribute("popovertarget", id);
+  more.setAttribute("aria-label", `Mehr zu ${repo}`);
+
+  placeUnder(menu, more);
   menu.addEventListener("click", (e) => {
     const act = (e.target as HTMLElement).closest<HTMLButtonElement>("button")?.dataset.act;
     menu.hidePopover();
@@ -462,6 +468,209 @@ linkDialog.addEventListener("close", async () => {
 
 Events.On("link:opened", takeLink);
 
+// ---- catalogs ---------------------------------------------------------------
+
+const catalogMenu = $<HTMLDivElement>("#catalog-menu");
+const catalogButton = $<HTMLButtonElement>("#catalog-button");
+const urlDialog = $<HTMLDialogElement>("#import-url");
+const urlForm = $<HTMLFormElement>("#url-form");
+const urlInput = $<HTMLInputElement>("#catalog-url");
+const urlError = $<HTMLParagraphElement>("#url-error");
+const importDialog = $<HTMLDialogElement>("#import");
+const manifest = $<HTMLUListElement>(".manifest", importDialog);
+const manifestTemplate = $<HTMLTemplateElement>("#manifest-item");
+
+placeUnder(catalogMenu, catalogButton);
+
+let planned: ImportPlan | undefined;
+let catalogBusy = false;
+
+function catalogAction(act: string | undefined) {
+  if (catalogBusy || importDialog.open || urlDialog.open) return;
+  if (act === "import-file") chooseCatalog();
+  if (act === "import-url") askForURL();
+  if (act === "export") exportCatalog();
+}
+
+catalogMenu.addEventListener("click", (e) => {
+  const act = (e.target as HTMLElement).closest<HTMLButtonElement>("button")?.dataset.catalog;
+  catalogMenu.hidePopover();
+  catalogAction(act);
+});
+for (const b of empty.querySelectorAll<HTMLButtonElement>("[data-catalog]")) {
+  b.addEventListener("click", () => catalogAction(b.dataset.catalog));
+}
+Events.On("catalog:menu", (ev) => catalogAction(ev.data));
+
+// note shows a passing message in the bar, then the usual summary again.
+let noteTimer: number | undefined;
+function note(text: string) {
+  clearTimeout(noteTimer);
+  noting = true;
+  summary.dataset.note = "";
+  summary.textContent = text;
+  noteTimer = setTimeout(() => {
+    noting = false;
+    delete summary.dataset.note;
+    render(apps);
+  }, 5000);
+}
+
+async function exportCatalog() {
+  catalogBusy = true;
+  try {
+    const path = await AppService.ExportCatalog();
+    if (path) note(`${plural(apps.length, "App", "Apps")} als Katalog gesichert: ${path.split("/").pop()}`);
+  } catch (err) {
+    note(`Nicht gesichert: ${errorText(err)}`);
+  } finally {
+    catalogBusy = false;
+  }
+}
+
+async function chooseCatalog() {
+  catalogBusy = true;
+  try {
+    const plan = await AppService.ChooseCatalog();
+    if (plan) showPlan(plan);
+  } catch (err) {
+    note(`Katalog nicht lesbar: ${errorText(err)}`);
+  } finally {
+    catalogBusy = false;
+  }
+}
+
+function askForURL() {
+  urlForm.reset();
+  setURLError("");
+  urlDialog.showModal();
+}
+
+function setURLError(message: string) {
+  urlError.textContent = message;
+  if (message) {
+    urlInput.setAttribute("aria-invalid", "true");
+    urlInput.setAttribute("aria-describedby", "url-note url-error");
+  } else {
+    urlInput.setAttribute("aria-invalid", "false");
+    urlInput.setAttribute("aria-describedby", "url-note");
+  }
+}
+
+urlDialog.querySelector("[data-close]")!.addEventListener("click", () => urlDialog.close());
+
+urlForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!urlInput.checkValidity()) {
+    setURLError(urlInput.validity.valueMissing ?
+      "Gib die Adresse des Katalogs an." :
+      "Das ist keine https-Adresse. Erwartet wird etwas wie https://example.com/apps.json.");
+    urlInput.focus();
+    return;
+  }
+  const submit = $<HTMLButtonElement>('button[type="submit"]', urlForm);
+  submit.disabled = true;
+  submit.textContent = "Wird geladen …";
+  setURLError("");
+  try {
+    const plan = await AppService.CatalogFromURL(urlInput.value);
+    urlDialog.close();
+    if (plan) showPlan(plan);
+  } catch (err) {
+    setURLError(errorText(err));
+    urlInput.focus();
+  } finally {
+    submit.disabled = false;
+    submit.textContent = "Laden";
+  }
+});
+
+urlInput.addEventListener("input", () => {
+  if (urlInput.getAttribute("aria-invalid") === "true" && urlInput.checkValidity()) setURLError("");
+});
+
+function showPlan(plan: ImportPlan) {
+  planned = plan;
+  const items = plan.items ?? [];
+  const fresh = items.filter((it) => !it.onList && !it.error);
+  const known = items.filter((it) => it.onList);
+  const bad = items.filter((it) => it.error);
+
+  const catalogName = plan.name ? `»${plan.name}«` : "";
+  $("#import-title", importDialog).textContent = fresh.length === 0 ?
+    `Nichts Neues im Katalog ${catalogName}`.trim() :
+    `${plural(fresh.length, "App", "Apps")} aus dem Katalog ${catalogName} übernehmen?`.replace("  ", " ");
+  $(".import-source .path", importDialog).textContent = plan.source;
+
+  const rows = [...fresh, ...known, ...bad].map((it) => manifestRow(it));
+  manifest.replaceChildren(...rows);
+
+  const parts: string[] = [];
+  if (known.length) parts.push(`${plural(known.length, "App steht", "Apps stehen")} schon auf der Liste und ${known.length === 1 ? "bleibt" : "bleiben"}, wie ${known.length === 1 ? "sie ist" : "sie sind"}.`);
+  if (bad.length) parts.push(`${plural(bad.length, "Eintrag ist", "Einträge sind")} nicht lesbar.`);
+  if (fresh.length) parts.push("Füge nur Repositories hinzu, deren Apps du vertraust. Installiert wird erst, wenn du es in der Liste sagst.");
+  $("#import-note", importDialog).textContent = parts.join(" ");
+
+  const ok = $<HTMLButtonElement>('button[value="ok"]', importDialog);
+  const cancel = $<HTMLButtonElement>('button[value="cancel"]', importDialog);
+  ok.hidden = fresh.length === 0;
+  cancel.textContent = fresh.length === 0 ? "Schließen" : "Abbrechen";
+  updateImportButton();
+  importDialog.returnValue = "";
+  importDialog.showModal();
+  manifest.scrollTop = 0;
+}
+
+function manifestRow(it: ImportItem): HTMLLIElement {
+  const li = (manifestTemplate.content.cloneNode(true) as DocumentFragment).firstElementChild as HTMLLIElement;
+  const box = $<HTMLInputElement>("input", li);
+  box.value = it.repo;
+  $(".manifest-repo", li).textContent = it.repo;
+  $<HTMLElement>(".channel-tag", li).hidden = it.channel !== "prerelease" || !!it.error;
+  const noteEl = $(".manifest-note", li);
+  if (it.error) {
+    li.dataset.state = "invalid";
+    box.disabled = true;
+    noteEl.textContent = it.error;
+  } else if (it.onList) {
+    li.dataset.state = "known";
+    box.disabled = true;
+    box.checked = true;
+    noteEl.textContent = "Schon auf der Liste";
+  } else {
+    li.dataset.state = "new";
+    box.checked = true;
+  }
+  return li;
+}
+
+function chosen(): ImportItem[] {
+  const repos = new Set([...manifest.querySelectorAll<HTMLInputElement>('li[data-state="new"] input:checked')].map((b) => b.value));
+  return (planned?.items ?? []).filter((it) => repos.has(it.repo) && !it.onList && !it.error);
+}
+
+function updateImportButton() {
+  const n = chosen().length;
+  const ok = $<HTMLButtonElement>('button[value="ok"]', importDialog);
+  ok.textContent = n === 0 ? "Hinzufügen" : `${plural(n, "App", "Apps")} hinzufügen`;
+  ok.disabled = n === 0;
+}
+
+manifest.addEventListener("change", updateImportButton);
+
+importDialog.addEventListener("close", async () => {
+  const items = chosen();
+  const choice = importDialog.returnValue;
+  importDialog.returnValue = "";
+  planned = undefined;
+  if (choice !== "ok" || items.length === 0) return;
+  try {
+    const added = await AppService.ImportCatalog(items);
+    note(added === 0 ? "Keine neuen Apps hinzugefügt" : `${plural(added, "App", "Apps")} aus dem Katalog hinzugefügt`);
+  } catch (err) {
+    note(`Nicht übernommen: ${errorText(err)}`);
+  }
+});
 // ---- command line ----------------------------------------------------------
 
 const commandDialog = $<HTMLDialogElement>("#command");

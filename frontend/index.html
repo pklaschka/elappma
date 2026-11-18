@@ -15,6 +15,7 @@
     <symbol id="i-arrow" viewBox="0 0 16 16"><path d="M3 8h10M9.5 4.5 13 8l-3.5 3.5"/></symbol>
     <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></symbol>
     <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.5 14 13H2zM8 6.5v3M8 11.5h.01"/></symbol>
+    <symbol id="i-chevron" viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></symbol>
   </svg>
 
   <header class="bar">
@@ -26,6 +27,16 @@
         <svg class="icon" aria-hidden="true"><use href="#i-refresh"/></svg>
         Prüfen
       </button>
+      <button type="button" id="catalog-button" class="button on-kraft" aria-haspopup="menu" popovertarget="catalog-menu">
+        Katalog
+        <svg class="icon" aria-hidden="true"><use href="#i-chevron"/></svg>
+      </button>
+      <div id="catalog-menu" class="menu" popover role="menu" aria-labelledby="catalog-button">
+        <button type="button" role="menuitem" data-catalog="import-file">Aus Datei importieren …</button>
+        <button type="button" role="menuitem" data-catalog="import-url">Von Adresse importieren …</button>
+        <hr>
+        <button type="button" role="menuitem" data-catalog="export">Liste exportieren …</button>
+      </div>
     </div>
   </header>
 
@@ -50,6 +61,11 @@
       <div id="empty" class="empty" hidden>
         <h3>Noch keine Apps</h3>
         <p>Trag oben ein Repository ein, dessen Releases eine App enthalten, etwa <code>pklaschka/feldspur</code> von GitHub oder <code>codeberg.org/owner/name</code> von Forgejo und Gitea. Die Liste gilt auf all deinen Macs, installiert wird auf jedem Mac einzeln.</p>
+        <p>Hast du schon eine Liste, etwa von einem anderen Rechner oder aus deinem Team? Dann übernimm sie als Katalog.</p>
+        <div class="empty-actions">
+          <button type="button" class="button" data-catalog="import-file">Katalog importieren …</button>
+          <button type="button" class="button" data-catalog="import-url">Von Adresse …</button>
+        </div>
       </div>
     </section>
   </main>
@@ -146,6 +162,30 @@
     </form>
   </dialog>
 
+  <dialog id="import-url" aria-labelledby="url-title" aria-describedby="url-note">
+    <form id="url-form" novalidate>
+      <h2 id="url-title">Katalog von einer Adresse laden</h2>
+      <p id="url-note">Eine https-Adresse, unter der ein Katalog liegt. Für eine Datei auf GitHub reicht der normale Link zur Datei.</p>
+      <label for="catalog-url" class="visually-hidden">Adresse des Katalogs</label>
+      <input id="catalog-url" name="url" type="url" required autocomplete="url" autocapitalize="off" spellcheck="false"
+             placeholder="https://github.com/owner/name/blob/main/apps.json" pattern="https://.+" data-error="url-error">
+      <p id="url-error" class="field-error"></p>
+      <div class="dialog-actions">
+        <button type="button" class="button" data-close>Abbrechen</button>
+        <button type="submit" class="button ink">Laden</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="import" aria-labelledby="import-title" aria-describedby="import-note">
+    <form method="dialog">
+      <h2 id="import-title"></h2>
+      <p class="import-source"><span class="path"></span></p>
+      <ul class="manifest"></ul>
+      <p id="import-note"></p>
+      <div class="dialog-actions">
+        <button value="cancel" class="button" autofocus>Abbrechen</button>
+        <button value="ok" class="button ink"></button>
   <dialog id="command" aria-labelledby="command-title" aria-describedby="command-note">
     <form method="dialog">
       <h2 id="command-title"></h2>
@@ -165,6 +205,14 @@
       </div>
     </form>
   </dialog>
+
+  <template id="manifest-item">
+    <li>
+      <label class="check"><input type="checkbox" name="repo"> <span class="manifest-repo"></span></label>
+      <span class="channel-tag" hidden>Vorab</span>
+      <span class="manifest-note"></span>
+    </li>
+  </template>
 
   <script type="module" src="/src/main.ts"></script>
 </body>
