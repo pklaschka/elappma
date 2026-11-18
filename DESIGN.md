@@ -130,6 +130,11 @@ One text field with the hint in the placeholder, a checkbox for prerelease, an e
 ### Menu
 A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
 
+### Catalog menu and import
+"Katalog" sits in the bar beside "Prüfen", an on-kraft button with a chevron that opens the same kind of menu as a row: "Aus Datei importieren …", "Von Adresse importieren …", a rule, "Liste exportieren …". The Ablage menu of the menu bar has the same three items (⌘O, ⇧⌘O, ⌘E), and the empty state offers the two imports as outlined buttons.
+
+Importing never acts at once. A wider dialog shows the catalog as a packing list: the source file or address in mono under the title, then one line per entry in a `well` box with dashed cut lines, new apps first with a checked box (and the "Vorab" tag), then apps already on the list (disabled, checked, "Schon auf der Liste"), then unreadable entries (disabled, their reason in express red below). The ink button counts what it adds ("3 Apps hinzufügen"); with nothing new it disappears and Abbrechen becomes Schließen. The address dialog keeps its error line's height so the buttons do not jump. Results ("3 Apps aus dem Katalog hinzugefügt", "… als Katalog gesichert") show for five seconds in the bar's summary, which on narrow windows appears just for them.
+
 ### Tracking strip (signature)
 An ordered list of three stops drawn as dots joined by legs. States come from `data-state` on the parcel: `current` (all green), `missing` (released in ink, rest pending), `update` (released in red), `failed` (strip hidden, "Kein Release erreichbar"). While installing, `data-busy` takes over: the first leg fills with download progress (`--progress`), the "Geladen" stop pulses, then the second leg half-fills during install. Motion stops under reduced motion.
 

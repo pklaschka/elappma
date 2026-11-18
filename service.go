@@ -25,6 +25,8 @@ func init() {
 	application.RegisterEvent[Progress]("install:progress")
 	application.RegisterEvent[[]store.Status]("apps:changed")
 	application.RegisterEvent[application.Void]("link:opened")
+	// "import-file", "import-url" or "export", from the Ablage menu
+	application.RegisterEvent[string]("catalog:menu")
 }
 
 // AppService is what the window calls. Each method maps to one thing the
@@ -196,6 +198,17 @@ func translate(err error) error {
 		"no release in the prerelease channel":                                          "hat noch kein Release",
 		"the app is not installed on this computer":                                     "Die App ist auf diesem Mac nicht installiert.",
 		"Lieferling cannot remove itself while it runs: quit it and move it to the Bin": "Lieferling kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
+		// catalogs
+		"the catalog lists no repositories":                                          "Im Katalog steht kein Repository.",
+		`not a catalog: there is no "apps" list`:                                     "Das ist kein Katalog: Die Liste „apps“ fehlt.",
+		"this is a web page, not a catalog (for a file on GitHub, use its Raw link)": "Das ist eine Webseite, kein Katalog. Bei einer Datei auf GitHub hilft ihr Raw-Link.",
+		"catalogs are only loaded over https":                                        "Kataloge werden nur über https geladen.",
+		"is not a web address":                                                       "ist keine Webadresse",
+		"the server answered":                                                        "Der Server antwortete mit",
+		"the catalog is larger than 1 MB":                                            "Der Katalog ist größer als 1 MB.",
+		"not valid JSON":                                                             "kein gültiges JSON",
+		"unknown channel":                                                            "Unbekannter Kanal",
+		"use stable or prerelease":                                                   "erlaubt sind stable und prerelease",
 	} {
 		if strings.Contains(msg, en) {
 			msg = strings.Replace(msg, en, de, 1)

@@ -7,6 +7,8 @@
 //	lieferling open <repo>                  start the installed app
 //	lieferling channel <repo> stable|prerelease
 //	lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
+//	lieferling export [<file>]              write the list as a catalog (to stdout without a file)
+//	lieferling import <file|url|-> [--dry-run]  add the apps of a catalog to the list
 //	lieferling paths                        where the shared and the local files are
 //
 // <repo> is owner/name or the repository's GitHub URL. Private repositories
@@ -44,7 +46,7 @@ func main() {
 var errUsage = errors.New("usage")
 
 func usage() error {
-	return fmt.Errorf("%w: lieferling list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | open <repo> | channel <repo> stable|prerelease | remove <repo> [--uninstall] | paths", errUsage)
+	return fmt.Errorf("%w: lieferling list | add <repo> [--prerelease] | install <repo> | update [<repo>...] | open <repo> | channel <repo> stable|prerelease | remove <repo> [--uninstall] | export [<file>] | import <file|url|-> [--dry-run] | paths", errUsage)
 }
 
 func run(ctx context.Context, s *store.Store, args []string, out io.Writer) error {
@@ -56,6 +58,7 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 	fs.SetOutput(io.Discard)
 	prerelease := fs.Bool("prerelease", false, "follow release candidates too")
 	uninstall := fs.Bool("uninstall", false, "also remove the app from this computer")
+	dryRun := fs.Bool("dry-run", false, "only show what importing would add")
 	if err := fs.Parse(reorder(rest)); err != nil {
 		return fmt.Errorf("%w: %v", errUsage, err)
 	}
@@ -164,6 +167,22 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 		fmt.Fprintf(out, "Removed %s from the list.\n", pos[0])
 		return nil
 
+	case "export":
+		if len(pos) > 1 {
+			return usage()
+		}
+		file := ""
+		if len(pos) == 1 && pos[0] != "-" {
+			file = pos[0]
+		}
+		return exportCatalog(s, file, out)
+
+	case "import":
+		if len(pos) != 1 {
+			return usage()
+		}
+		return importCatalog(ctx, s, pos[0], *dryRun, out)
+
 	case "paths":
 		fmt.Fprintf(out, "shared (synced): %s\nthis computer:   %s\n", s.ConfigPath, s.StatePath)
 		return nil
@@ -227,11 +246,19 @@ lieferling manages apps installed from GitHub releases.
   lieferling open <repo>                  start the installed app
   lieferling channel <repo> stable|prerelease
   lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
+  lieferling export [<file>]              write the list as a catalog (to stdout without a file)
+  lieferling import <file|url|-> [--dry-run]
+                                          add the apps of a catalog to the list
   lieferling paths                        where the shared and the local files are
 
 <repo> is owner/name or the repository's GitHub URL. Private repositories need
 a token: GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the Keychain
 item "Lieferling GitHub" (security add-generic-password -s "Lieferling GitHub" -a github -w).
+
+A catalog is a JSON file with a list of repositories (what export writes), a
+JSON array, or plain text with one repository per line. import takes a file, an
+https URL or - for stdin; it adds the apps that are not on the list yet and
+leaves the others as they are. It installs nothing.
 
 The list of apps is shared through iCloud Drive (Lieferling/config.json); what is
 installed is recorded on each computer.`

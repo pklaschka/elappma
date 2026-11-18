@@ -62,6 +62,20 @@ func main() {
 	if runtime.GOOS == "darwin" {
 		appMenu.AddRole(application.AppMenu)
 	}
+	file := appMenu.AddSubmenu("Ablage")
+	catalogMenu := func(action string) func(*application.Context) {
+		return func(*application.Context) {
+			if w, ok := app.Window.GetByName("main"); ok {
+				w.Show()
+				w.Focus()
+			}
+			app.Event.Emit("catalog:menu", action)
+		}
+	}
+	file.Add("Katalog importieren …").SetAccelerator("CmdOrCtrl+O").OnClick(catalogMenu("import-file"))
+	file.Add("Katalog von Adresse importieren …").SetAccelerator("CmdOrCtrl+Shift+O").OnClick(catalogMenu("import-url"))
+	file.AddSeparator()
+	file.Add("Liste als Katalog exportieren …").SetAccelerator("CmdOrCtrl+E").OnClick(catalogMenu("export"))
 	appMenu.AddRole(application.EditMenu)
 	appMenu.AddRole(application.WindowMenu)
 	help := appMenu.AddSubmenu("Hilfe")

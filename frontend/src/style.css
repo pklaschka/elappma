@@ -155,7 +155,7 @@ code, .path { font-family: var(--mono); font-size: 0.9em; user-select: text; }
 .button[aria-busy="true"] .icon { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { rotate: 1turn; } }
 
-input[type="text"] {
+input:is([type="text"], [type="url"]) {
   flex: 1;
   min-inline-size: 0;
   min-block-size: 32px;
@@ -167,8 +167,8 @@ input[type="text"] {
   font: inherit;
   user-select: text;
 }
-input[type="text"]:user-invalid,
-input[type="text"][aria-invalid="true"] { border-color: var(--express); }
+input:is([type="text"], [type="url"]):user-invalid,
+input:is([type="text"], [type="url"])[aria-invalid="true"] { border-color: var(--express); }
 
 .check { display: inline-flex; align-items: center; gap: 0.375rem; color: var(--ink-2); white-space: nowrap; }
 .check input { margin: 0; }
@@ -387,6 +387,8 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
 .empty { max-inline-size: 36rem; padding-block: 2.5rem; }
 .empty h3 { margin: 0 0 0.375rem; font-size: var(--step-2); font-weight: 650; }
 .empty p { margin: 0; color: var(--ink-2); }
+.empty p + p { margin-block-start: 0.75rem; }
+.empty-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-block-start: 1rem; }
 
 /* While the first list is fetched: blank parcels on the same grid as the
    real ones, each with a shipment travelling along its tracking strip. */
@@ -502,6 +504,44 @@ dialog .check { display: flex; }
 dialog .check + .check { margin-block-start: 0.5rem; }
 .dialog-actions { display: flex; justify-content: end; gap: 0.5rem; margin-block-start: 1.25rem; }
 
+#import-url { inline-size: min(30rem, calc(100vw - 2rem)); }
+#import-url input { inline-size: 100%; }
+#import-url .field-error { margin-block-start: 0.4rem; min-block-size: 1lh; }
+#import-url .field-error:empty { display: block; }
+
+/* the catalog's contents, set like a packing list: one line per parcel,
+   dashed cut lines between them */
+#import { inline-size: min(32rem, calc(100vw - 2rem)); }
+#import h2 { text-wrap: balance; }
+.import-source { margin-block: -0.25rem 0.75rem; font-size: var(--step--1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manifest {
+  margin: 0;
+  padding: 0 0.75rem;
+  max-block-size: min(16rem, 45vh);
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--cut);
+  border-radius: var(--radius);
+  background: var(--well);
+}
+.manifest li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding-block: 0.5rem;
+  border-block-end: 1px dashed var(--cut);
+}
+.manifest li:last-child { border-block-end: 0; }
+.manifest .check { color: var(--ink); min-inline-size: 0; }
+.manifest-repo { overflow: hidden; text-overflow: ellipsis; user-select: text; }
+.manifest-note { margin-inline-start: auto; color: var(--ink-2); font-size: var(--step--1); }
+.manifest [data-state="known"] .check { color: var(--ink-2); }
+.manifest [data-state="invalid"] .check { color: var(--ink-2); }
+.manifest [data-state="invalid"] .manifest-note { flex-basis: 100%; margin-inline-start: calc(13px + 0.375rem); color: var(--express); }
+#import-note { margin: 0.75rem 0 0; font-size: var(--step--1); }
+#import-note:empty { display: none; }
+
 .foot {
   grid-row: 4;
   padding: 0.45rem 1rem;
@@ -518,7 +558,7 @@ dialog .check + .check { margin-block-start: 0.5rem; }
 
 @media (width < 640px) {
   .bar { padding-inline-start: 5rem; }
-  .summary { display: none; }
+  .summary:not([data-note]) { display: none; }
   .add input[type="text"] { flex-basis: 100%; }
   .parcels { grid-template-columns: minmax(0, 1fr) auto auto; }
   .who { grid-column: 1; grid-row: 1; }

@@ -67,6 +67,35 @@ Lieferling always asks before adding or installing:
 
 The landing page lives in `site/` and is published by the Pages workflow. GitHub Pages has to be switched on once: Settings → Pages → Source: GitHub Actions.
 
+## Catalogs
+
+A catalog is a list of repositories in a file: to set up a new Mac outside your iCloud account, to hand your apps to someone else, or to keep a team's apps in a repository. In the app, "Katalog" in the title bar (or the Ablage menu) exports the list and imports a catalog from a file or an `https` address. Importing shows what is in the catalog first; it adds only the apps that are not on the list yet, leaves the others as they are, and installs nothing.
+
+<p align="center"><img src="docs/catalog-import.png" width="560" alt="Lieferling asking whether to take three apps from the catalog “Team Werkstatt”, with one already on the list and one unreadable entry."></p>
+
+What export writes:
+
+```json
+{
+  "lieferling": "catalog",
+  "version": 1,
+  "name": "Team Werkstatt",
+  "apps": [
+    { "repo": "pklaschka/feldspur", "channel": "stable", "appName": "Feldspur" }
+  ]
+}
+```
+
+`name` and `appName` are optional. Import also takes a bare JSON array of repositories, Lieferling's own `config.json`, or plain text with one repository per line (`#` starts a comment, a channel may follow the repository):
+
+```text
+# Team Werkstatt
+pklaschka/feldspur
+https://github.com/pklaschka/meerkats-cms  prerelease
+```
+
+A link to a file's page on GitHub (`github.com/owner/name/blob/...`) is read through its raw link. Catalogs are limited to 1 MB and only loaded over `https`.
+
 ## Private repositories
 
 Public repositories work without signing in. For private ones Lieferling needs a GitHub token with read access to the repository's contents. It looks, in this order, at:
@@ -91,6 +120,9 @@ lieferling update [<repo>...]           update the given apps, or every app with
 lieferling open <repo>                  start the installed app
 lieferling channel <repo> stable|prerelease
 lieferling remove <repo> [--uninstall]  take it off the list (and off this computer)
+lieferling export [<file>]              write the list as a catalog (to stdout without a file)
+lieferling import <file|url|-> [--dry-run]
+                                        add the apps of a catalog to the list
 lieferling paths                        where the shared and the local files are
 ```
 
@@ -137,6 +169,7 @@ With squash merges the PR title is the commit message, so put the marker there.
 | `internal/state` | what is installed on this computer |
 | `internal/install` | putting an app in place (macOS so far) |
 | `internal/store` | the core both front ends use |
+| `internal/catalog` | catalog files: reading, writing, loading from a URL |
 | `internal/deeplink` | `lieferling://` links |
 | `site/` | the landing page for README links (GitHub Pages) |
 | `docs/` | images for this README |
