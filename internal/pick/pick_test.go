@@ -3,13 +3,13 @@ package pick
 import (
 	"testing"
 
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 )
 
-func assets(names ...string) []github.Asset {
-	out := make([]github.Asset, len(names))
+func assets(names ...string) []forge.Asset {
+	out := make([]forge.Asset, len(names))
 	for i, n := range names {
-		out[i] = github.Asset{Name: n}
+		out[i] = forge.Asset{Name: n}
 	}
 	return out
 }
@@ -29,7 +29,7 @@ func TestAsset(t *testing.T) {
 
 	cases := []struct {
 		name       string
-		assets     []github.Asset
+		assets     []forge.Asset
 		goos, arch string
 		want       string
 	}{
@@ -61,7 +61,7 @@ func TestAsset(t *testing.T) {
 }
 
 func TestRelease(t *testing.T) {
-	rs := []github.Release{
+	rs := []forge.Release{
 		{TagName: "v2.0.0", Draft: true},
 		{TagName: "v1.1.0-rc.2", Prerelease: true},
 		{TagName: "v1.0.0"},

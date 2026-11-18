@@ -5,12 +5,14 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/pklaschka/lieferling/internal/deeplink"
+	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/icon"
 	"github.com/pklaschka/lieferling/internal/install"
 	"github.com/pklaschka/lieferling/internal/pick"
@@ -30,6 +32,7 @@ func init() {
 	application.RegisterEvent[application.Void]("link:opened")
 	// "import-file", "import-url" or "export", from the Ablage menu
 	application.RegisterEvent[string]("catalog:menu")
+	application.RegisterEvent[application.Void]("command:open")
 }
 
 // AppService is what the window calls. Each method maps to one thing the
@@ -168,12 +171,59 @@ func (s *AppService) Icon(ctx context.Context, repo string) (string, error) {
 	return "data:" + ic.MIME + ";base64," + base64.StdEncoding.EncodeToString(ic.Data), nil
 }
 
-// OpenURL opens a release page in the browser.
-func (s *AppService) OpenURL(url string) error {
-	if !strings.HasPrefix(url, "https://github.com/") {
-		return fmt.Errorf("only GitHub links are opened")
+// OpenURL opens a release page in the browser: only https links to GitHub
+// or to the server of an app on the list.
+func (s *AppService) OpenURL(raw string) error {
+	if !s.knownHost(raw) {
+		return fmt.Errorf("Nur Links zu GitHub und zu den Servern der Apps auf der Liste werden geöffnet.")
 	}
-	return s.app.Browser.OpenURL(url)
+	return s.app.Browser.OpenURL(raw)
+}
+
+func (s *AppService) knownHost(raw string) bool {
+	u, err := url.Parse(raw)
+	if err != nil || u.Scheme != "https" || u.User != nil {
+		return false
+	}
+	if strings.EqualFold(u.Host, "github.com") {
+		return true
+	}
+	cfg, err := s.store.Config()
+	if err != nil {
+		return false
+	}
+	for _, a := range cfg.Apps {
+		if r, err := forge.ParseRepo(a.Repo); err == nil && strings.EqualFold(r.WebHost(), u.Host) {
+			return true
+		}
+	}
+	return false
+}
+
+// CommandLine says whether the lieferling command is set up in the terminal.
+func (s *AppService) CommandLine() install.Command {
+	return install.CommandStatus(install.BundledCommand(s.self), install.CommandPath)
+}
+
+// InstallCommandLine links the command line in this app into the PATH,
+// replacing an older copy there. macOS asks for an administrator password;
+// closing that dialog changes nothing and is no error.
+func (s *AppService) InstallCommandLine(ctx context.Context) (install.Command, error) {
+	bundled := install.BundledCommand(s.self)
+	err := install.LinkCommand(ctx, bundled, install.CommandPath, false)
+	if err != nil && !errors.Is(err, install.ErrCanceled) {
+		return s.CommandLine(), translate(err)
+	}
+	return s.CommandLine(), nil
+}
+
+// RemoveCommandLine takes the link out of the PATH again.
+func (s *AppService) RemoveCommandLine(ctx context.Context) (install.Command, error) {
+	err := install.UnlinkCommand(ctx, install.CommandPath, false)
+	if err != nil && !errors.Is(err, install.ErrCanceled) {
+		return s.CommandLine(), translate(err)
+	}
+	return s.CommandLine(), nil
 }
 
 // ConfigPath says where the shared list lives.
@@ -205,9 +255,10 @@ func (s *AppService) remember(list []store.Status) {
 func translate(err error) error {
 	msg := err.Error()
 	for en, de := range map[string]string{
-		"repository or release not found (private repositories need a token)":           "Repository oder Release nicht gefunden. Private Repositories brauchen einen GitHub-Token.",
+		"repository or release not found (private repositories need a token)":           "Repository oder Release nicht gefunden. Private Repositories brauchen einen Token.",
+		"does not answer like a Forgejo or Gitea server":                                "antwortet nicht wie ein Forgejo- oder Gitea-Server.",
+		"is not a repository (owner/name, host/owner/name or its URL)":                  "ist kein Repository. Erwartet wird owner/name für GitHub, host/owner/name für Forgejo und Gitea oder die URL.",
 		"installing is not supported on this system yet":                                "Installieren geht auf diesem System noch nicht, bisher nur unter macOS.",
-		"is not a GitHub repository (owner/name or its URL)":                            "ist kein GitHub-Repository. Erwartet wird owner/name oder die URL.",
 		"has nothing to install on":                                                     "hat keine passende Datei für",
 		"no release in the stable channel":                                              "hat noch kein stabiles Release",
 		"no release in the prerelease channel":                                          "hat noch kein Release",
@@ -224,6 +275,9 @@ func translate(err error) error {
 		"not valid JSON":                                                             "kein gültiges JSON",
 		"unknown channel":                                                            "Unbekannter Kanal",
 		"use stable or prerelease":                                                   "erlaubt sind stable und prerelease",
+		"this copy of Lieferling carries no command line":                            "Diese Ausgabe von Lieferling bringt keine Kommandozeile mit.",
+		"is not a link Lieferling made: remove it yourself":                          "ist kein Verweis von Lieferling. Entferne die Datei selbst, wenn du sie nicht mehr brauchst.",
+		"is a folder":                                                                "ist ein Ordner, kein Befehl. Lieferling lässt ihn unangetastet.",
 	} {
 		if strings.Contains(msg, en) {
 			msg = strings.Replace(msg, en, de, 1)

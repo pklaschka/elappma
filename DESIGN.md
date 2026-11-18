@@ -114,7 +114,7 @@ One column of parcels on a four-row window grid: bar, add form, scrolling list, 
 
 ## Elevation & Depth
 
-Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the remove dialog.
+Flat. The label lies on the table. Only things that float above the window cast a shadow: the more menu (popover) and the dialogs.
 
 ## Shapes
 
@@ -129,7 +129,10 @@ Outlined on label stock by default; a current row uses it for "Öffnen", which s
 One text field with the hint in the placeholder, a checkbox for prerelease, an error line below that reserves its height so the form does not jump.
 
 ### Menu
-A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a GitHub link and, after a rule, the destructive item.
+A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a link to the release page (named for its forge: GitHub, Codeberg or the host) and, after a rule, the destructive item.
+
+### Command line dialog
+Opened from the app menu ("Kommandozeilen-Tool installieren …") or the quiet text button at the end of the footer. One dialog with four states set by `data-state`: `missing` (Abbrechen, Installieren), `other` (Behalten, Ersetzen), `linked` (Entfernen on the left, Fertig) and `unavailable` (Schließen). Below the note a dashed slip shows the link like an address: `/usr/local/bin/lieferling` on the first line, an arrow and the target in `ink-2` on the second, breaking only after a slash; once linked a delivered-green tick stands before it. The work happens with the dialog open because macOS asks for the password on top; the main button says "Wird installiert …" meanwhile. Closing the password dialog changes nothing and shows no error.
 
 ### Catalog menu and import
 "Katalog" sits in the bar beside "Prüfen", an on-kraft button with a chevron that opens the same kind of menu as a row: "Aus Datei importieren …", "Von Adresse importieren …", a rule, "Liste exportieren …". The Ablage menu of the menu bar has the same three items (⌘O, ⇧⌘O, ⌘E), and the empty state offers the two imports as outlined buttons.

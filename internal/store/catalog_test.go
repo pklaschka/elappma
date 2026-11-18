@@ -6,11 +6,11 @@ import (
 
 	"github.com/pklaschka/lieferling/internal/catalog"
 	"github.com/pklaschka/lieferling/internal/config"
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 )
 
 func TestExportImport(t *testing.T) {
-	s, _ := newTestStore(t, map[string][]github.Release{})
+	s, _ := newTestStore(t, map[string][]forge.Release{})
 	err := config.Update(s.ConfigPath, func(c *config.Config) error {
 		c.Apps = []config.App{
 			{Repo: "me/demo", Channel: "prerelease", AppName: "Demo"},

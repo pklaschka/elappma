@@ -8,7 +8,7 @@ import (
 
 	"golang.org/x/mod/semver"
 
-	"github.com/pklaschka/lieferling/internal/github"
+	"github.com/pklaschka/lieferling/internal/forge"
 )
 
 // Channels.
@@ -17,9 +17,9 @@ const (
 	Prerelease = "prerelease" // stable releases and release candidates
 )
 
-// Release returns the newest release of the channel. GitHub lists releases
+// Release returns the newest release of the channel. Forges list releases
 // newest first; drafts are never picked.
-func Release(releases []github.Release, channel string) (github.Release, bool) {
+func Release(releases []forge.Release, channel string) (forge.Release, bool) {
 	for _, r := range releases {
 		if r.Draft {
 			continue
@@ -29,7 +29,7 @@ func Release(releases []github.Release, channel string) (github.Release, bool) {
 		}
 		return r, true
 	}
-	return github.Release{}, false
+	return forge.Release{}, false
 }
 
 // Version turns a tag into a version: "v1.2.3" and "1.2.3" both give "1.2.3".
@@ -54,8 +54,8 @@ func Newer(a, b string) bool {
 }
 
 // Asset returns the asset to install on goos/goarch, or false when none fits.
-func Asset(assets []github.Asset, goos, goarch string) (github.Asset, bool) {
-	best, bestScore := github.Asset{}, 0
+func Asset(assets []forge.Asset, goos, goarch string) (forge.Asset, bool) {
+	best, bestScore := forge.Asset{}, 0
 	for _, a := range assets {
 		if s := score(a.Name, goos, goarch); s > bestScore {
 			best, bestScore = a, s

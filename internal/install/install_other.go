@@ -19,3 +19,9 @@ func (unsupported) Uninstall(context.Context, string) error { return ErrUnsuppor
 func (unsupported) InstalledVersion(string) (string, string) { return "", "" }
 
 func (unsupported) Open(context.Context, string) error { return ErrUnsupported }
+
+// LinkCommand is macOS only so far.
+func LinkCommand(context.Context, string, string, bool) error { return ErrUnsupported }
+
+// UnlinkCommand is macOS only so far.
+func UnlinkCommand(context.Context, string, bool) error { return ErrUnsupported }

@@ -1,4 +1,5 @@
-// Command lieferling manages apps installed from GitHub releases.
+// Command lieferling manages apps installed from GitHub, Forgejo and Gitea
+// releases.
 //
 //	lieferling list                         apps on the list, installed and newest version
 //	lieferling add <repo> [--prerelease]    put a repository on the list
@@ -11,9 +12,11 @@
 //	lieferling import <file|url|-> [--dry-run]  add the apps of a catalog to the list
 //	lieferling paths                        where the shared and the local files are
 //
-// <repo> is owner/name or the repository's GitHub URL. Private repositories
-// need a token: GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the
-// Keychain item "Lieferling GitHub".
+// <repo> is owner/name for GitHub, host/owner/name for a Forgejo or Gitea
+// server (codeberg.org/owner/name), or the repository's URL. Private
+// repositories need a token: on GitHub GH_TOKEN, a GitHub CLI login (gh auth
+// login) or the Keychain item "Lieferling GitHub"; on other servers
+// LIEFERLING_TOKEN_<HOST> or the Keychain item "Lieferling <host>".
 package main
 
 import (
@@ -71,7 +74,7 @@ func run(ctx context.Context, s *store.Store, args []string, out io.Writer) erro
 			return err
 		}
 		if len(list) == 0 {
-			fmt.Fprintln(out, "No apps yet. Add one with: lieferling add owner/name")
+			fmt.Fprintln(out, "No apps yet. Add one with: lieferling add owner/name (or host/owner/name)")
 			return nil
 		}
 		w := tabwriter.NewWriter(out, 0, 0, 2, ' ', 0)
@@ -237,7 +240,7 @@ func reorder(args []string) []string {
 }
 
 const help = `
-lieferling manages apps installed from GitHub releases.
+lieferling manages apps installed from GitHub, Forgejo and Gitea releases.
 
   lieferling list                         apps on the list, installed and newest version
   lieferling add <repo> [--prerelease]    put a repository on the list
@@ -251,9 +254,16 @@ lieferling manages apps installed from GitHub releases.
                                           add the apps of a catalog to the list
   lieferling paths                        where the shared and the local files are
 
-<repo> is owner/name or the repository's GitHub URL. Private repositories need
-a token: GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the Keychain
-item "Lieferling GitHub" (security add-generic-password -s "Lieferling GitHub" -a github -w).
+<repo> is owner/name for GitHub, host/owner/name for a Forgejo or Gitea server
+(such as codeberg.org/owner/name), or the repository's URL.
+
+Private repositories need a token with read access:
+  GitHub          GH_TOKEN, a GitHub CLI login (gh auth login), or on macOS the
+                  Keychain item "Lieferling GitHub"
+                  (security add-generic-password -s "Lieferling GitHub" -a github -w)
+  Forgejo, Gitea  LIEFERLING_TOKEN_<HOST> (LIEFERLING_TOKEN_CODEBERG_ORG), or on
+                  macOS the Keychain item "Lieferling <host>"
+                  (security add-generic-password -s "Lieferling codeberg.org" -a token -w)
 
 A catalog is a JSON file with a list of repositories (what export writes), a
 JSON array, or plain text with one repository per line. import takes a file, an

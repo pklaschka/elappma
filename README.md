@@ -5,7 +5,7 @@
 <h1 align="center">Lieferling</h1>
 
 <p align="center">
-  Installs and updates your own desktop apps from GitHub releases.<br>
+  Installs and updates your own desktop apps from GitHub, Forgejo and Gitea releases.<br>
   A small app store for the (often private, often unsigned) Electron apps you build yourself.
 </p>
 
@@ -27,6 +27,7 @@ Add a repository once, then install, update and remove its app with one click or
 - **App with menu bar icon:** one click installs or updates. Lieferling checks for updates in the background every 6 hours and notifies you when there are new ones.
 - **Command line:** `lieferling` does the same from the terminal.
 - **Synced across your Macs:** the list lives in iCloud Drive (`Lieferling/config.json`), so every Mac on the same iCloud account sees it. What is installed stays per Mac.
+- **GitHub, Forgejo and Gitea:** `owner/name` is a GitHub repository; `codeberg.org/owner/name` (or any Forgejo or Gitea server, also with a port) works the same way.
 - **Keeps itself current:** put `pklaschka/lieferling` on its own list.
 
 macOS only for now. Windows and Linux are prepared (see `internal/install`) but not built.
@@ -55,7 +56,7 @@ A link can put an app on the list and install it. GitHub only links to `https`, 
 
 | Parameter | |
 |---|---|
-| `repo` | `owner/name` or the repository's URL |
+| `repo` | `owner/name` (GitHub), `host/owner/name` (Forgejo, Gitea) or the repository's URL |
 | `install=1` | install right after adding |
 | `prerelease=1` | follow release candidates |
 
@@ -108,7 +109,16 @@ Public repositories work without signing in. For private ones Lieferling needs a
    security add-generic-password -s "Lieferling GitHub" -a github -w
    ```
 
-The token is never synced; set it up on each Mac.
+On a Forgejo or Gitea server (Codeberg too) Lieferling needs a token with read access to repositories, from:
+
+1. the variable `LIEFERLING_TOKEN_<HOST>`, the host in capitals with every other character as `_` (`LIEFERLING_TOKEN_CODEBERG_ORG`, `LIEFERLING_TOKEN_GIT_EXAMPLE_COM_3000`),
+2. the Keychain item "Lieferling *host*":
+
+   ```sh
+   security add-generic-password -s "Lieferling codeberg.org" -a token -w
+   ```
+
+A token only ever goes to its own server. Tokens are never synced; set them up on each Mac.
 
 ## Command line
 
@@ -126,11 +136,15 @@ lieferling import <file|url|-> [--dry-run]
 lieferling paths                        where the shared and the local files are
 ```
 
-`<repo>` is `owner/name` or the repository's GitHub URL.
+`<repo>` is `owner/name` for GitHub, `host/owner/name` for a Forgejo or Gitea server (`codeberg.org/owner/name`), or the repository's web, clone or SSH URL. Servers are always reached over `https`.
+
+The app carries the command line. Choose **Lieferling → Kommandozeilen-Tool installieren …** (or the button in the window's footer) and Lieferling links `/usr/local/bin/lieferling` to `Lieferling.app/Contents/Helpers/lieferling`; macOS asks for an administrator password. The command then updates with the app. An older `lieferling` in `/usr/local/bin`, say from a release download, is replaced only when you confirm. The same dialog removes the link again.
+
+Without the app, download `lieferling-cli-<version>-darwin-<arch>.tar.gz` from the releases and put `lieferling` on your `PATH`.
 
 ## How it picks what to install
 
-- **Release:** the newest non-draft release; on the `stable` channel release candidates (GitHub "pre-releases") are skipped.
+- **Release:** the newest non-draft release; on the `stable` channel release candidates ("pre-releases") are skipped.
 - **File:** the release asset that fits this Mac. A `.dmg` beats a `.zip`; a file naming this processor (`arm64`, `x64`, …) beats a `universal` one, which beats one naming no processor. On Apple Silicon an Intel-only build is the last resort (it runs through Rosetta). Files naming another system are never picked, and a bare `.zip` only when it names macOS.
 - **Install:** like the original script. Quit the running app (it may ask about unsaved work), replace the copy in `/Applications` and clear the quarantine flag. When `/Applications` is not writable, Lieferling asks for an administrator password.
 
@@ -163,7 +177,7 @@ With squash merges the PR title is the commit message, so put the marker there.
 
 | Path | What |
 |---|---|
-| `internal/github` | GitHub releases and downloads, token lookup |
+| `internal/forge` | releases and downloads from GitHub, Forgejo and Gitea, token lookup |
 | `internal/pick` | channel, version and asset choice |
 | `internal/config` | the synced list (iCloud Drive) |
 | `internal/state` | what is installed on this computer |

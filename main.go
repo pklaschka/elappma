@@ -1,4 +1,4 @@
-// Lieferling installs and updates apps from GitHub releases. This is the app
+// Lieferling installs and updates apps from GitHub, Forgejo and Gitea releases. This is the app
 // with a window and a menu bar icon; cmd/lieferling is the command line. Both
 // share the core in internal/.
 package main
@@ -41,7 +41,7 @@ func main() {
 
 	app := application.New(application.Options{
 		Name:        "Lieferling",
-		Description: "Installs and updates apps from GitHub releases",
+		Description: "Installs and updates apps from GitHub, Forgejo and Gitea releases",
 		Services: []application.Service{
 			application.NewService(svc),
 			application.NewService(notifier),
@@ -58,9 +58,22 @@ func main() {
 
 	// The default menu's Help > Learn More loads wails.io into the window;
 	// build the menu ourselves with a help item that opens the README.
+	// The app menu is the standard one plus the command line item.
 	appMenu := app.NewMenu()
+	var commandItem *application.MenuItem
 	if runtime.GOOS == "darwin" {
-		appMenu.AddRole(application.AppMenu)
+		m := appMenu.AddSubmenu("Lieferling")
+		m.AddRole(application.About)
+		m.AddSeparator()
+		commandItem = m.Add("Kommandozeilen-Tool installieren …")
+		m.AddSeparator()
+		m.AddRole(application.ServicesMenu)
+		m.AddSeparator()
+		m.AddRole(application.Hide)
+		m.AddRole(application.HideOthers)
+		m.AddRole(application.UnHide)
+		m.AddSeparator()
+		m.AddRole(application.Quit)
 	}
 	file := appMenu.AddSubmenu("Ablage")
 	catalogMenu := func(action string) func(*application.Context) {
@@ -105,6 +118,14 @@ func main() {
 	show := func() {
 		window.Show()
 		window.Focus()
+	}
+
+	if commandItem != nil {
+		// the window shows what is set up and does the work
+		commandItem.OnClick(func(*application.Context) {
+			show()
+			app.Event.Emit("command:open")
+		})
 	}
 
 	svc.relaunch = func() {
