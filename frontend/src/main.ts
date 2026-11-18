@@ -1,5 +1,6 @@
 import {Clipboard, Events} from "@wailsio/runtime";
 import {AppService} from "../bindings/github.com/pklaschka/lieferling";
+import {type Command, CommandState} from "../bindings/github.com/pklaschka/lieferling/internal/install/models";
 import type {Link} from "../bindings/github.com/pklaschka/lieferling/internal/deeplink/models";
 import type {Status} from "../bindings/github.com/pklaschka/lieferling/internal/store/models";
 
@@ -460,6 +461,120 @@ linkDialog.addEventListener("close", async () => {
 });
 
 Events.On("link:opened", takeLink);
+
+// ---- command line ----------------------------------------------------------
+
+const commandDialog = $<HTMLDialogElement>("#command");
+const commandError = $<HTMLParagraphElement>(".field-error", commandDialog);
+const commandInstall = $<HTMLButtonElement>('button[value="install"]', commandDialog);
+const commandRemove = $<HTMLButtonElement>('button[value="remove"]', commandDialog);
+
+const commandCopy: Record<string, {title: string; note: string; cancel?: string; ok?: string; done?: string}> = {
+  [CommandState.CommandMissing]: {
+    title: "Kommandozeilen-Tool installieren",
+    note: "Mit dem Befehl lieferling erledigst du im Terminal alles, was dieses Fenster kann. " +
+      "Lieferling legt dafür einen Verweis in /usr/local/bin an, macOS fragt nach deinem Passwort. " +
+      "Mit jedem Update der App ist auch der Befehl aktuell.",
+    cancel: "Abbrechen",
+    ok: "Installieren",
+  },
+  [CommandState.CommandOther]: {
+    title: "Kommandozeilen-Tool ersetzen?",
+    note: "In /usr/local/bin liegt schon ein Befehl lieferling, vermutlich aus einem Release-Download. " +
+      "Ersetzt du ihn durch den aus dieser App, bleibt er mit jedem Update aktuell.",
+    cancel: "Behalten",
+    ok: "Ersetzen",
+  },
+  [CommandState.CommandLinked]: {
+    title: "Kommandozeilen-Tool ist installiert",
+    note: "Öffne ein neues Terminalfenster und tippe lieferling list. " +
+      "Der Befehl kommt aus dieser App und ist mit jedem Update aktuell.",
+    done: "Fertig",
+  },
+  [CommandState.CommandUnavailable]: {
+    title: "Kein Kommandozeilen-Tool dabei",
+    note: "Diese Ausgabe von Lieferling bringt keine Kommandozeile mit, etwa weil sie direkt aus dem Quellcode läuft. " +
+      "Die Releases auf GitHub haben sie.",
+    done: "Schließen",
+  },
+};
+
+// withCode sets text and puts the command and the folder in code.
+function withCode(el: HTMLElement, text: string) {
+  const parts = text.split(/(lieferling list|lieferling(?=[ ,])|\/usr\/local\/bin)/);
+  el.replaceChildren(...parts.map((part, i) => {
+    if (i % 2 === 0) return part;
+    const code = document.createElement("code");
+    code.textContent = part;
+    return code;
+  }));
+}
+
+function showCommand(c: Command) {
+  const copy = commandCopy[c.state] ?? commandCopy[CommandState.CommandUnavailable];
+  commandDialog.dataset.state = c.state;
+  $("#command-title", commandDialog).textContent = copy.title;
+  withCode($("#command-note", commandDialog), copy.note);
+  $(".from", commandDialog).textContent = c.path;
+  // long paths break after a slash, never inside a name
+  const to = c.state === CommandState.CommandOther ? c.other || "eine eigene Datei, kein Verweis" : c.bundled;
+  $(".to", commandDialog).replaceChildren(...to.split("/").flatMap((part, i) =>
+    i === 0 ? [part] : [document.createElement("wbr"), "/" + part]));
+  for (const b of commandDialog.querySelectorAll<HTMLButtonElement>("[data-show]")) {
+    b.hidden = !b.dataset.show!.split(" ").includes(c.state);
+  }
+  const [cancel, done] = commandDialog.querySelectorAll<HTMLButtonElement>('button[value="cancel"]');
+  cancel.textContent = copy.cancel ?? "";
+  done.textContent = copy.done ?? "";
+  commandInstall.textContent = copy.ok ?? "";
+}
+
+// the dialog's main button, as on macOS
+function focusCommandDefault() {
+  [...commandDialog.querySelectorAll<HTMLButtonElement>("[data-show]:not([hidden])")].at(-1)?.focus();
+}
+
+async function openCommand() {
+  commandError.textContent = "";
+  try {
+    showCommand(await AppService.CommandLine());
+  } catch (err) {
+    commandError.textContent = errorText(err);
+  }
+  if (!commandDialog.open) commandDialog.showModal();
+  focusCommandDefault();
+}
+
+// the work happens with the dialog open: macOS asks for the password on top
+async function runCommand(button: HTMLButtonElement, busyText: string, work: () => Promise<Command>) {
+  const label = button.textContent;
+  commandError.textContent = "";
+  for (const b of commandDialog.querySelectorAll("button")) b.disabled = true;
+  button.setAttribute("aria-busy", "true");
+  button.textContent = busyText;
+  try {
+    showCommand(await work());
+  } catch (err) {
+    button.textContent = label;
+    commandError.textContent = errorText(err);
+  } finally {
+    button.removeAttribute("aria-busy");
+    for (const b of commandDialog.querySelectorAll("button")) b.disabled = false;
+    focusCommandDefault();
+  }
+}
+
+commandInstall.addEventListener("click", (e) => {
+  e.preventDefault();
+  runCommand(commandInstall, "Wird installiert …", async () => (await AppService.InstallCommandLine())!);
+});
+commandRemove.addEventListener("click", (e) => {
+  e.preventDefault();
+  runCommand(commandRemove, "Wird entfernt …", async () => (await AppService.RemoveCommandLine())!);
+});
+
+$("#open-command").addEventListener("click", openCommand);
+Events.On("command:open", openCommand);
 
 AppService.ConfigPath().then((p) => ($("#config-path").textContent = p));
 load().then(takeLink);

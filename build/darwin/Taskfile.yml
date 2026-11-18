@@ -174,7 +174,22 @@ tasks:
         fi
       - cp "{{.BIN_DIR}}/{{.APP_NAME}}" "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/MacOS"
       - cp build/darwin/Info.plist "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents"
+      # the command line rides along; the app links it into /usr/local/bin
+      - task: build:cli
+        vars:
+          OUTPUT: "{{.BIN_DIR}}/{{.APP_NAME}}.app/Contents/Helpers/lieferling"
       - task: '{{if eq OS "darwin"}}codesign:adhoc{{else}}codesign:skip{{end}}'
+
+  build:cli:
+    summary: Builds the universal command line (arm64 + amd64) that the app bundle carries
+    cmds:
+      - mkdir -p "$(dirname "{{.OUTPUT}}")"
+      - for: [arm64, amd64]
+        cmd: GOOS=darwin GOARCH={{.ITEM}} CGO_ENABLED=0 go build -trimpath -buildvcs=false -ldflags="-s -w" -o "{{.OUTPUT}}-{{.ITEM}}" ./cmd/lieferling
+      - wails3 tool lipo -output "{{.OUTPUT}}" -input "{{.OUTPUT}}-arm64" -input "{{.OUTPUT}}-amd64"
+      - rm -f "{{.OUTPUT}}-arm64" "{{.OUTPUT}}-amd64"
+    vars:
+      OUTPUT: '{{.OUTPUT | default (printf "%s/lieferling" .BIN_DIR)}}'
 
   codesign:adhoc:
     summary: Ad-hoc signs the app bundle (macOS only)
