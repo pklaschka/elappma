@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <meta name="robots" content="noindex">
+  <title>In Elappma öffnen</title>
+  <!-- GitHub READMEs only link to https, so a README links here and this
+       page hands the request to the app as an elappma:// link. -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      --kraft: light-dark(oklch(70% 0.075 68), oklch(37% 0.05 60));
+      --kraft-ink: light-dark(oklch(21% 0.03 55), oklch(95% 0.015 75));
+      --kraft-line: light-dark(oklch(60% 0.07 65), oklch(46% 0.05 60));
+      --stock: light-dark(oklch(99.2% 0 0), oklch(19% 0.006 60));
+      --ink: light-dark(oklch(18% 0.01 60), oklch(95% 0.004 75));
+      --ink-2: light-dark(oklch(43% 0.01 60), oklch(74% 0.008 70));
+      --cut: light-dark(oklch(80% 0.006 60), oklch(36% 0.008 60));
+      --express: light-dark(oklch(53% 0.2 27), oklch(70% 0.17 27));
+      --focus: light-dark(oklch(50% 0.14 250), oklch(76% 0.12 250));
+      --mono: ui-monospace, "SF Mono", Menlo, monospace;
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body {
+      margin: 0;
+      min-block-size: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      background: var(--stock);
+      color: var(--ink);
+      font: 1rem / 1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+    }
+    header {
+      padding: 0.875rem 1rem;
+      background: var(--kraft);
+      color: var(--kraft-ink);
+      border-block-end: 1px solid var(--kraft-line);
+      font-weight: 750;
+      font-size: 1.25rem;
+      letter-spacing: -0.02em;
+    }
+    main { inline-size: min(100% - 2rem, 34rem); margin: 3rem auto; }
+    h1 { margin: 0 0 0.25rem; font-size: 1.5rem; line-height: 1.25; text-wrap: balance; }
+    .repo { margin: 0 0 1.5rem; font-family: var(--mono); color: var(--ink-2); }
+    p { margin: 0 0 1rem; }
+    .muted { color: var(--ink-2); font-size: 0.875rem; }
+    a { color: inherit; text-underline-offset: 0.2em; }
+    .button {
+      display: inline-flex;
+      align-items: center;
+      min-block-size: 40px;
+      padding: 0.5rem 1.1rem;
+      border-radius: 6px;
+      background: var(--ink);
+      color: var(--stock);
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .button:hover { background: color-mix(in oklch, var(--ink) 82%, var(--stock)); }
+    :focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+    hr { margin: 2rem 0 1rem; border: 0; border-block-start: 1px dashed var(--cut); }
+    .error { color: var(--express); }
+  </style>
+</head>
+<body>
+  <header>Elappma</header>
+  <main>
+    <section id="ok" hidden>
+      <h1 id="title"></h1>
+      <p class="repo" id="repo"></p>
+      <p><a class="button" id="open">In Elappma öffnen</a></p>
+      <p class="muted">Elappma fragt nach, bevor es etwas hinzufügt oder installiert.</p>
+      <hr>
+      <p class="muted">Noch kein Elappma auf diesem Mac? <a href="https://github.com/pklaschka/elappma/releases/latest">Hier herunterladen</a>, in Programme ziehen und den Link danach noch einmal öffnen.</p>
+    </section>
+    <section id="bad" hidden>
+      <h1>Dieser Link ist unvollständig</h1>
+      <p class="error">Es fehlt ein Repository in der Form <code>owner/name</code>.</p>
+    </section>
+  </main>
+  <script>
+    const q = new URLSearchParams(location.search);
+    const repo = (q.get("repo") || "").trim()
+      .replace(/^(https?:\/\/)?(www\.)?github\.com[\/:]/i, "").replace(/\.git$/, "").replace(/\/+$/, "");
+    if (/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+      const install = /^(1|true|yes|on)$/i.test(q.get("install") || "");
+      const link = new URLSearchParams({repo});
+      if (install) link.set("install", "1");
+      if (/^(1|true|yes|on)$/i.test(q.get("prerelease") || "")) link.set("prerelease", "1");
+      const url = "elappma://add?" + link.toString().replace(/%2F/g, "/");
+      document.getElementById("title").textContent =
+        `${repo.split("/")[1]} ${install ? "mit Elappma installieren" : "zu Elappma hinzufügen"}`;
+      document.getElementById("repo").textContent = repo;
+      document.getElementById("open").href = url;
+      document.getElementById("ok").hidden = false;
+      location.href = url; // try once; the button stays for a second go
+    } else {
+      document.getElementById("bad").hidden = false;
+    }
+  </script>
+</body>
+</html>

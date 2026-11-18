@@ -410,6 +410,8 @@ dialog:modal { overscroll-behavior: contain; }
 dialog::backdrop { overflow: hidden; overscroll-behavior: contain; background: oklch(15% 0.01 60 / 0.35); }
 dialog h2 { margin: 0 0 0.5rem; font-size: var(--step-1); }
 dialog p { margin: 0 0 1rem; color: var(--ink-2); }
+dialog .check { display: flex; }
+dialog .check + .check { margin-block-start: 0.5rem; }
 .dialog-actions { display: flex; justify-content: end; gap: 0.5rem; margin-block-start: 1.25rem; }
 
 .foot {

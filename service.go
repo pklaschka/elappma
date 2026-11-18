@@ -8,6 +8,8 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
+	"github.com/pklaschka/elappma/internal/deeplink"
+	"github.com/pklaschka/elappma/internal/install"
 	"github.com/pklaschka/elappma/internal/pick"
 	"github.com/pklaschka/elappma/internal/store"
 )
@@ -22,6 +24,7 @@ type Progress struct {
 func init() {
 	application.RegisterEvent[Progress]("install:progress")
 	application.RegisterEvent[[]store.Status]("apps:changed")
+	application.RegisterEvent[application.Void]("link:opened")
 }
 
 // AppService is what the window calls. Each method maps to one thing the
@@ -30,8 +33,12 @@ type AppService struct {
 	store *store.Store
 	app   *application.App
 
+	self     string // this app's bundle, for updating itself
+	relaunch func() // quits and opens the new copy
+
 	mu   sync.Mutex
 	last []store.Status // newest list, for the tray and notifications
+	link *deeplink.Link // a deep link the window has not handled yet
 }
 
 // Apps returns the list with installed and newest versions.
@@ -75,8 +82,43 @@ func (s *AppService) Install(ctx context.Context, repo string) (store.Status, er
 	if err != nil {
 		return st, translate(err)
 	}
+	if install.SamePath(st.Path, s.self) && s.relaunch != nil {
+		// Elappma just replaced itself: start the new copy
+		go s.relaunch()
+		return st, nil
+	}
 	s.changed(ctx)
 	return st, nil
+}
+
+// TakeLink returns the deep link that opened Elappma, once, or nil.
+func (s *AppService) TakeLink() *deeplink.Link {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	l := s.link
+	s.link = nil
+	return l
+}
+
+// LinkFor returns the deep link that adds repo, for a README.
+func (s *AppService) LinkFor(repo string, install bool) (string, error) {
+	repo, err := store.NormalizeRepo(repo)
+	if err != nil {
+		return "", translate(err)
+	}
+	return deeplink.Link{Repo: repo, Install: install}.PageURL(), nil
+}
+
+// openLink keeps a deep link for the window and tells it.
+func (s *AppService) openLink(raw string) {
+	l, err := deeplink.Parse(raw)
+	if err != nil {
+		return
+	}
+	s.mu.Lock()
+	s.link = &l
+	s.mu.Unlock()
+	s.app.Event.Emit("link:opened")
 }
 
 // SetChannel switches between stable releases and release candidates.
@@ -141,6 +183,7 @@ func translate(err error) error {
 		"has nothing to install on":                                           "hat keine passende Datei für",
 		"no release in the stable channel":                                    "hat noch kein stabiles Release",
 		"no release in the prerelease channel":                                "hat noch kein Release",
+		"Elappma cannot remove itself while it runs: quit it and move it to the Bin": "Elappma kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
 	} {
 		if strings.Contains(msg, en) {
 			msg = strings.Replace(msg, en, de, 1)

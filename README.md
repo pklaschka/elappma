@@ -16,7 +16,25 @@ Download the DMG from the [releases](https://github.com/pklaschka/elappma/releas
 xattr -cr /Applications/Elappma.app
 ```
 
-Add `pklaschka/elappma` to its own list and Elappma keeps itself up to date.
+Add `pklaschka/elappma` to its own list and Elappma keeps itself up to date: an update replaces the app while it runs and then restarts it. Any other app that was open during its update is opened again afterwards.
+
+## Links for a README
+
+A link can put an app on the list and install it. GitHub only links to `https`, so a README links to the landing page, which hands the request to Elappma:
+
+```markdown
+[In Elappma installieren](https://pklaschka.github.io/elappma/?repo=owner/name&install=1)
+```
+
+| Parameter | |
+|---|---|
+| `repo` | `owner/name` or the repository's URL |
+| `install=1` | install right after adding |
+| `prerelease=1` | follow release candidates |
+
+Elappma always asks before adding or installing. "Link für die README kopieren" in an app's menu copies the line above for that app. Under the hood the page opens `elappma://add?repo=owner/name&install=1`, which works anywhere else links to custom schemes are allowed.
+
+The landing page lives in `site/` and is published by the Pages workflow. GitHub Pages has to be switched on once: Settings → Pages → Source: GitHub Actions.
 
 ## Private repositories
 
@@ -87,5 +105,7 @@ With squash merges the PR title is the commit message, so put the marker there.
 | `internal/state` | what is installed on this computer |
 | `internal/install` | putting an app in place (macOS so far) |
 | `internal/store` | the core both front ends use |
+| `internal/deeplink` | `elappma://` links |
+| `site/` | the landing page for README links (GitHub Pages) |
 | `cmd/elappma` | the command line |
 | `main.go`, `service.go`, `frontend/` | the Wails app |

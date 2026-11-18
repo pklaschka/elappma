@@ -17,6 +17,7 @@ import (
 	"github.com/wailsapp/wails/v3/pkg/icons"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 
+	"github.com/pklaschka/elappma/internal/install"
 	"github.com/pklaschka/elappma/internal/store"
 )
 
@@ -24,7 +25,12 @@ import (
 var assets embed.FS
 
 func main() {
-	svc := &AppService{store: store.New()}
+	svc := &AppService{store: store.New(), self: install.SelfBundle()}
+	if svc.self != "" {
+		opts := install.DefaultOptions()
+		opts.Self = svc.self
+		svc.store.Installer = install.New(opts)
+	}
 	notifier := notifications.New()
 
 	app := application.New(application.Options{
@@ -80,6 +86,18 @@ func main() {
 		window.Show()
 		window.Focus()
 	}
+
+	svc.relaunch = func() {
+		if err := reopenAfterExit(svc.self); err == nil {
+			app.Quit()
+		}
+	}
+
+	// elappma:// links, from the landing page or a click elsewhere
+	app.Event.OnApplicationEvent(events.Common.ApplicationLaunchedWithUrl, func(e *application.ApplicationEvent) {
+		svc.openLink(e.Context().URL())
+		show()
+	})
 
 	checker := &updateChecker{svc: svc, notifier: notifier}
 	tray := app.SystemTray.New()

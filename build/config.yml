@@ -85,3 +85,8 @@ fileAssociations:
 # Other data
 other:
   - name: My Other Data
+
+# Deep links: elappma://add?repo=owner/name (see README)
+protocols:
+  - scheme: elappma
+    description: Elappma deep link

@@ -10,4 +10,4 @@ Icon=Elappma
 Categories=Utility;
 StartupWMClass=Elappma
 
- 
+MimeType=x-scheme-handler/elappma; 
