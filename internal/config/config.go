@@ -1,0 +1,168 @@
+// Package config holds the configuration shared by all computers: the list
+// of apps and their channels. It lives in iCloud Drive on macOS, so every Mac
+// signed in to the same iCloud account sees the same list. What is installed
+// where stays local (package state).
+package config
+
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
+	"runtime"
+	"sort"
+	"strings"
+)
+
+// App is one repository in the list.
+type App struct {
+	Repo    string `json:"repo"`    // owner/name
+	Channel string `json:"channel"` // pick.Stable or pick.Prerelease
+	// AppName is the bundle name learned at the first install (such as
+	// "Feldspur"), so other computers can find a copy installed without Elappma.
+	AppName string `json:"appName,omitempty"`
+}
+
+// Config is the shared configuration file.
+type Config struct {
+	Version int   `json:"version"`
+	Apps    []App `json:"apps"`
+	// CheckIntervalHours is how often the app looks for updates (default 6).
+	CheckIntervalHours int `json:"checkIntervalHours,omitempty"`
+}
+
+// Find returns the app for repo (case-insensitive) or nil.
+func (c *Config) Find(repo string) *App {
+	for i := range c.Apps {
+		if strings.EqualFold(c.Apps[i].Repo, repo) {
+			return &c.Apps[i]
+		}
+	}
+	return nil
+}
+
+// Interval returns CheckIntervalHours with its default.
+func (c *Config) Interval() int {
+	if c.CheckIntervalHours <= 0 {
+		return 6
+	}
+	return c.CheckIntervalHours
+}
+
+// DefaultPath is ELAPPMA_CONFIG if set, else Elappma/config.json in iCloud Drive
+// on a Mac that has it, else in the user's configuration directory.
+func DefaultPath() string {
+	if p := os.Getenv("ELAPPMA_CONFIG"); p != "" {
+		return p
+	}
+	home, _ := os.UserHomeDir()
+	if runtime.GOOS == "darwin" && home != "" {
+		icloud := filepath.Join(home, "Library", "Mobile Documents", "com~apple~CloudDocs")
+		if st, err := os.Stat(icloud); err == nil && st.IsDir() {
+			return filepath.Join(icloud, "Elappma", "config.json")
+		}
+	}
+	dir, err := os.UserConfigDir()
+	if err != nil {
+		dir = home
+	}
+	return filepath.Join(dir, "Elappma", "config.json")
+}
+
+// Load reads the configuration. A missing file is an empty configuration.
+// Conflict copies that iCloud leaves beside the file ("config 2.json") are
+// merged in, so an app added on two Macs at once is not lost.
+func Load(path string) (Config, error) {
+	cfg, err := read(path)
+	if err != nil {
+		return cfg, err
+	}
+	for _, p := range conflictCopies(path) {
+		other, err := read(p)
+		if err != nil {
+			continue
+		}
+		for _, a := range other.Apps {
+			if cfg.Find(a.Repo) == nil {
+				cfg.Apps = append(cfg.Apps, a)
+			}
+		}
+	}
+	return cfg, nil
+}
+
+// Update reads the newest file, lets fn change it, and writes it back. Any
+// conflict copies are folded in and removed.
+func Update(path string, fn func(*Config) error) error {
+	cfg, err := Load(path)
+	if err != nil {
+		return err
+	}
+	if err := fn(&cfg); err != nil {
+		return err
+	}
+	if err := write(path, cfg); err != nil {
+		return err
+	}
+	for _, p := range conflictCopies(path) {
+		_ = os.Remove(p)
+	}
+	return nil
+}
+
+func read(path string) (Config, error) {
+	var cfg Config
+	data, err := os.ReadFile(path)
+	if errors.Is(err, os.ErrNotExist) {
+		return Config{Version: 1}, nil
+	}
+	if err != nil {
+		return cfg, err
+	}
+	if err := json.Unmarshal(data, &cfg); err != nil {
+		return cfg, fmt.Errorf("%s is not valid JSON: %w", path, err)
+	}
+	return cfg, nil
+}
+
+func write(path string, cfg Config) error {
+	cfg.Version = 1
+	sort.SliceStable(cfg.Apps, func(i, j int) bool {
+		return strings.ToLower(cfg.Apps[i].Repo) < strings.ToLower(cfg.Apps[j].Repo)
+	})
+	data, err := json.MarshalIndent(cfg, "", "  ")
+	if err != nil {
+		return err
+	}
+	return WriteFileAtomic(path, append(data, '\n'))
+}
+
+// WriteFileAtomic writes through a temporary file and a rename, so a reader
+// (or iCloud) never sees half a file.
+func WriteFileAtomic(path string, data []byte) error {
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(path), ".tmp-*")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(tmp.Name())
+	if _, err := tmp.Write(data); err != nil {
+		tmp.Close()
+		return err
+	}
+	if err := tmp.Close(); err != nil {
+		return err
+	}
+	return os.Rename(tmp.Name(), path)
+}
+
+// conflictCopies finds "config 2.json", "config 3.json" ... beside path.
+func conflictCopies(path string) []string {
+	ext := filepath.Ext(path)
+	stem := strings.TrimSuffix(path, ext)
+	matches, _ := filepath.Glob(stem + " *" + ext)
+	return matches
+}
