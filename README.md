@@ -1,12 +1,35 @@
-# Elappma
+<p align="center">
+  <img src="docs/icon.png" width="128" height="128" alt="">
+</p>
 
-Elappma installs and updates desktop apps from GitHub releases: a small app store for your own (often private, often unsigned) Electron apps. It is the install script, generalized: add a repository once, then install, update and remove its app with one click or one command.
+<h1 align="center">Elappma</h1>
 
-- **App with menu bar icon:** a list of your apps with installed and newest version, one click to install or update. It checks for updates in the background (every 6 hours) and sends a notification when there are new ones.
+<p align="center">
+  Installs and updates your own desktop apps from GitHub releases.<br>
+  A small app store for the (often private, often unsigned) Electron apps you build yourself.
+</p>
+
+<p align="center">
+  <a href="https://github.com/pklaschka/elappma/releases/latest"><b>Download for macOS</b></a>
+  &nbsp;·&nbsp;
+  <a href="#command-line">Command line</a>
+  &nbsp;·&nbsp;
+  <a href="#links-for-a-readme">Links for a README</a>
+</p>
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/window-dark.png">
+  <img src="docs/window-light.png" alt="The Elappma window: four apps, one with an update waiting (red), one installed and current (green), one downloading, one whose release cannot be reached.">
+</picture>
+
+Add a repository once, then install, update and remove its app with one click or one command. Every app on the list reads like a parcel label: the installed version, the newest one, and a tracking strip from *Erschienen* to *Geladen* to *Installiert*.
+
+- **App with menu bar icon:** one click installs or updates. Elappma checks for updates in the background every 6 hours and notifies you when there are new ones.
 - **Command line:** `elappma` does the same from the terminal.
-- **Synced across your Macs:** the list of apps lives in iCloud Drive (`Elappma/config.json`), so every Mac signed in to the same iCloud account sees it. What is installed stays per Mac.
+- **Synced across your Macs:** the list lives in iCloud Drive (`Elappma/config.json`), so every Mac on the same iCloud account sees it. What is installed stays per Mac.
+- **Keeps itself current:** put `pklaschka/elappma` on its own list.
 
-macOS only for now; Windows and Linux are prepared (see `internal/install`), not built.
+macOS only for now. Windows and Linux are prepared (see `internal/install`) but not built.
 
 ## Install
 
@@ -32,7 +55,11 @@ A link can put an app on the list and install it. GitHub only links to `https`, 
 | `install=1` | install right after adding |
 | `prerelease=1` | follow release candidates |
 
-Elappma always asks before adding or installing. "Link für die README kopieren" in an app's menu copies the line above for that app. Under the hood the page opens `elappma://add?repo=owner/name&install=1`, which works anywhere else links to custom schemes are allowed.
+Elappma always asks before adding or installing:
+
+<p align="center"><img src="docs/link-dialog.png" width="560" alt="Elappma asking whether to add pklaschka/meerkats-cms, with options to install right away and to follow pre-releases."></p>
+
+"Link für die README kopieren" in an app's menu copies such a link for that app. Under the hood the page opens `elappma://add?repo=owner/name&install=1`, which works anywhere else links to custom schemes are allowed.
 
 The landing page lives in `site/` and is published by the Pages workflow. GitHub Pages has to be switched on once: Settings → Pages → Source: GitHub Actions.
 
@@ -107,6 +134,8 @@ With squash merges the PR title is the commit message, so put the marker there.
 | `internal/store` | the core both front ends use |
 | `internal/deeplink` | `elappma://` links |
 | `site/` | the landing page for README links (GitHub Pages) |
+| `docs/` | images for this README |
+| `build/appicon.icon`, `build/appicon.png` | the app icon (Icon Composer layers and the classic icon) |
 | `cmd/elappma` | the command line |
 | `main.go`, `service.go`, `frontend/` | the Wails app |
 

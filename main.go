@@ -14,7 +14,6 @@ import (
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 	"github.com/wailsapp/wails/v3/pkg/events"
-	"github.com/wailsapp/wails/v3/pkg/icons"
 	"github.com/wailsapp/wails/v3/pkg/services/notifications"
 
 	"github.com/pklaschka/elappma/internal/install"
@@ -23,6 +22,12 @@ import (
 
 //go:embed all:frontend/dist
 var assets embed.FS
+
+// trayIcon is the menu bar symbol: a parcel with its label, drawn in black
+// for macOS to tint (a template image).
+//
+//go:embed build/darwin/tray-template.png
+var trayIcon []byte
 
 func main() {
 	svc := &AppService{store: store.New(), self: install.SelfBundle()}
@@ -102,7 +107,7 @@ func main() {
 	checker := &updateChecker{svc: svc, notifier: notifier}
 	tray := app.SystemTray.New()
 	if runtime.GOOS == "darwin" {
-		tray.SetTemplateIcon(icons.SystrayMacTemplate)
+		tray.SetTemplateIcon(trayIcon)
 	}
 	tray.SetTooltip("Elappma")
 	menu := app.NewMenu()

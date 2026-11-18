@@ -6,6 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="robots" content="noindex">
   <title>In Elappma öffnen</title>
+  <link rel="icon" href="icon.png">
   <!-- GitHub READMEs only link to https, so a README links here and this
        page hands the request to the app as an elappma:// link. -->
   <style>
@@ -41,6 +42,9 @@
       font-weight: 750;
       font-size: 1.25rem;
       letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     main { inline-size: min(100% - 2rem, 34rem); margin: 3rem auto; }
     h1 { margin: 0 0 0.25rem; font-size: 1.5rem; line-height: 1.25; text-wrap: balance; }
@@ -66,7 +70,7 @@
   </style>
 </head>
 <body>
-  <header>Elappma</header>
+  <header><img src="icon.png" width="28" height="28" alt="">Elappma</header>
   <main>
     <section id="ok" hidden>
       <h1 id="title"></h1>
