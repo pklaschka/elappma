@@ -15,7 +15,8 @@ colors:
   express-soft: "light-dark(oklch(95.5% 0.03 27), oklch(29% 0.07 27))"
   delivered: "light-dark(oklch(44% 0.09 152), oklch(76% 0.11 152))"
   pending: "light-dark(oklch(82% 0.004 60), oklch(38% 0.006 60))"
-  focus: "light-dark(oklch(50% 0.14 250), oklch(76% 0.12 250))"
+  focus: "{colors.ink}"
+  edge: "color-mix(in oklch, {colors.ink-2} 70%, {colors.label-stock})"
 typography:
   headline:
     fontFamily: "'Archivo Variable', system-ui, sans-serif"
@@ -40,10 +41,10 @@ typography:
     fontSize: "0.75rem"
 rounded:
   tag: "3px"
-  item: "4px"
+  item: "2px"
   stamp: "7px"
-  control: "6px"
-  sheet: "10px"
+  control: "4px"
+  sheet: "8px"
 spacing:
   row: "1rem"
   gutter: "1rem"
@@ -90,6 +91,10 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 - **Delivered green** (`delivered`): a completed tracking strip on an app that is current.
 - **Pending** (`pending`): stops not yet reached.
 
+### Controls
+- **Edge** (`edge`): the 1px frame of buttons, the text field and the tick box, a step darker than the cut line so a control holds 3:1 against the stock. Cut lines stay `cut-line`.
+- **Focus** is printed in ink (kraft-ink on the bar), never a blue: a 2px outline 2px off buttons and links; the text field instead thickens its own frame to ink (express while invalid), so there is never a box around a box.
+
 ### Named Rules
 - **Red means action.** Express red is never decoration. If no update waits and nothing failed, there is no red on screen.
 - **Kraft stays up top.** Kraft is the bar, never a row, button fill or highlight.
@@ -109,7 +114,7 @@ Three voices. **Archivo** (variable, self-hosted from `@fontsource-variable/arch
 
 ### Named Rules
 - **Numbers are mono.** A version or path is always set in `--mono`; prose never is.
-- **Archivo labels, system reads.** Archivo names things (the app, an app, a dialog, a field); sentences, buttons and inputs stay in the system face.
+- **Archivo labels, system reads.** Archivo names things (the app, an app, a dialog, a field); buttons are labels too and use it at weight 650; sentences and inputs stay in the system face.
 
 ## Layout
 
@@ -121,18 +126,21 @@ Flat. The label lies on the table. Only things that float above the window cast 
 
 ## Shapes
 
-Small radii: 6px for controls, 4px for menu items, 3px for the "Vorab" tag, 7px for the empty stamp field, 10px for the dialog sheet. Route stops are 9px dots.
+Small, cut-paper radii: 4px for controls, 2px for menu items, 3px for the "Vorab" tag and the tick box, 7px for the empty stamp field, 8px for menus' and dialogs' sheets. Route stops are 9px dots.
 
 ## Components
 
 ### Buttons
-Outlined on label stock by default; a current row uses it for "Öffnen", which starts the installed app (hidden on Lieferling's own row). Variants: **ink** (filled black, the one action on a row that is not current), **express** (filled red, "Aktualisieren" and "Alle aktualisieren"), **on-kraft** (outlined, in the bar), **danger** (red text, red-soft on hover), **icon-only** (borderless, the more button).
+Outlined on label stock by default; a current row uses it for "Öffnen", which starts the installed app (hidden on Lieferling's own row). Variants: **ink** (filled black, the one action on a row that is not current), **express** (filled red, "Aktualisieren" and "Alle aktualisieren"), **on-kraft** (outlined, in the bar), **danger** (red text, red-soft on hover), **icon-only** (borderless 32px square, the more button).
+
+Every variant sets only `--bg`, `--fg` and `--bd`, and states change only those, so no state can leak one variant's look into another. Hover darkens the edge to ink (fills darken by mixing with ink); a press shades and drops the button 1px like a stamp; an open menu keeps its trigger in the hover look; disabled outlined buttons fade and turn their edge dashed, like the loading placeholders.
 
 ### Inputs
-One text field with the hint in the placeholder, a checkbox for prerelease, an error line below that reserves its height so the form does not jump.
+One text field with the hint in the placeholder, a checkbox for prerelease drawn as an ink tick box (WebKit before Safari 26.2 ignores `accent-color` and would show system blue), a placeholder that ends in an ellipsis rather than a cut letter, an error line below that reserves its height so the form does not jump.
 
 ### Menu
 A popover under the more button with "Öffnen" (disabled while the app is not installed here) above a rule, a checkable item (Vorabversionen verfolgen), a link to the release page (named for its forge: GitHub, Codeberg or the host) and, after a rule, the destructive item.
+Pointer hover shades an item with `well`; the keyboard's item is printed solid (ink, or express for the destructive item). Items leave room for a tick only in menus that have one. In dark mode the sheet is `well`, a step lighter than the page. Menus fade in from 3px above.
 
 ### Command line dialog
 Opened from the app menu ("Kommandozeilen-Tool installieren …") or the quiet text button at the end of the footer. One dialog with four states set by `data-state`: `missing` (Abbrechen, Installieren), `other` (Behalten, Ersetzen), `linked` (Entfernen on the left, Fertig) and `unavailable` (Schließen). Below the note a dashed slip shows the link like an address: `/usr/local/bin/lieferling` on the first line, an arrow and the target in `ink-2` on the second, breaking only after a slash; once linked a delivered-green tick stands before it. The work happens with the dialog open because macOS asks for the password on top; the main button says "Wird installiert …" meanwhile, a line asks for the password, and Abbrechen stays live and stops the wait (after two minutes Lieferling gives up by itself). Closing the password dialog changes nothing and shows no error. When installing fails, the `sudo` command that does the same appears below the error in a `well` box with a Kopieren button.
