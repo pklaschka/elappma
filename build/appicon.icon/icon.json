@@ -32,6 +32,19 @@
         "opacity": 0
       },
       "specular": false
+    },
+    {
+      "layers": [
+        {
+          "image-name": "paper.png",
+          "name": "paper"
+        }
+      ],
+      "shadow": {
+        "kind": "none",
+        "opacity": 0
+      },
+      "specular": false
     }
   ],
   "supported-platforms": {
