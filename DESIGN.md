@@ -79,7 +79,7 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 ## Colors
 
 ### Primary
-- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it. The bar is real paper, not a flat fill: three noise layers drawn by the browser from inline SVG (`--kraft-mottle` a cloudy tone, `--kraft-grain` fine specks, `--kraft-fibres` a few short light fibres), retinted for dark mode. Kept quiet enough that the bar text reads as if printed on it.
+- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it. The bar is real paper, not a flat fill: three noise layers drawn by the browser from inline SVG (`--kraft-mottle` a cloudy tone, `--kraft-grain` fine specks, `--kraft-fibres` a few short light fibres), retinted for dark mode (pale grain and dim fibres on dark kraft), with `color-interpolation-filters='sRGB'` so the tint does not depend on the engine. A 2px `kraft-line` edge closes the bar like the edge of a carton. Kept quiet enough that the bar text reads as if printed on it.
 
 ### Neutral
 - **Label stock** (`label-stock`): the window ground. **Well** (`well`): pressed and hovered surfaces.
@@ -100,11 +100,12 @@ Three voices. **Archivo** (variable, self-hosted from `@fontsource-variable/arch
 
 ### Hierarchy
 - **Headline** (Archivo 1.25rem, 800, width 125%, capitals, +0.02em): the window name in the bar, like a sender's name printed on a box.
-- **Title** (Archivo 1rem, 700): app name, dialog titles; the empty state's heading at 1.25rem.
+- **Title** (Archivo 1rem, 750, width 110%): app name; dialog titles and the empty state's heading at normal width, 700.
+- **Stamp initial** (Archivo, 800, width 125%): the letter in an empty stamp field, stamped in the wordmark's voice. The bar's summary is Archivo 500, so the bar speaks in one voice.
 - **Tracking number** (mono 1rem, 600, +0.02em): installed → newest version.
 - **Body** (0.875rem / 1.45): everything else.
 - **Label** (0.75rem): repository, status text, footer.
-- **Field label** (Archivo 0.6875rem, 600, width 87.5%, capitals, +0.05em): the route stops; the "Vorab" tag the same at 0.625rem, 700.
+- **Field label** (Archivo 0.6875rem, 600, width 75%, capitals, +0.05em): the route stops; the "Vorab" tag the same at 700.
 
 ### Named Rules
 - **Numbers are mono.** A version or path is always set in `--mono`; prose never is.

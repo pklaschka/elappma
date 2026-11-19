@@ -33,9 +33,9 @@
   --display: "Archivo Variable", system-ui, -apple-system, sans-serif;
   /* kraft paper, drawn by the browser from noise: a cloudy tone, fine
      specks and a few short fibres, tinted for light and dark below */
-  --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 0 0.06 0.55 0 0 0 -0.18'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
-  --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.1 0 0 0 0 0.04 2.2 0 0 0 -1.05'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
-  --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.03 .5' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.97 0 0 0 0 0.9 0 0 0 0 0.78 3.4 0 0 0 -2.55'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 0 0.06 0.55 0 0 0 -0.18'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
+  --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter color-interpolation-filters='sRGB' id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.18 0 0 0 0 0.1 0 0 0 0 0.04 1.7 0 0 0 -0.92'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.07 .45' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.97 0 0 0 0 0.9 0 0 0 0 0.78 3.4 0 0 0 -2.55'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   accent-color: var(--ink);
@@ -45,9 +45,9 @@
 /* on dark kraft the grain is lighter than the paper, the fibres paler still */
 @media (prefers-color-scheme: dark) {
   :root {
-    --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.01 0.6 0 0 0 -0.15'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
-    --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.06 0 0 0 0 0.03 0 0 0 0 0.01 2.2 0 0 0 -1.0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
-    --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.03 .5' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.8 0 0 0 0 0.66 0 0 0 0 0.5 2.6 0 0 0 -1.95'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+    --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.01 0.6 0 0 0 -0.15'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
+    --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter color-interpolation-filters='sRGB' id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .56 0 0 0 0 .42 1.4 0 0 0 -.68'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+    --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.07 .45' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .48 0 0 0 0 .34 1.8 0 0 0 -1.4'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
   }
 }
 
@@ -115,7 +115,7 @@ input, textarea, .selectable, .field-error, .problem span { -webkit-user-select:
   padding: 0.625rem 1rem 0.625rem 5.5rem;
   background: var(--kraft-fibres), var(--kraft-grain), var(--kraft-mottle), var(--kraft);
   color: var(--kraft-ink);
-  border-block-end: 1px solid var(--kraft-line);
+  border-block-end: 2px solid var(--kraft-line);
 }
 
 /* the sender's name, printed wide across the box */
@@ -135,6 +135,8 @@ input, textarea, .selectable, .field-error, .problem span { -webkit-user-select:
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+  font-family: var(--display);
+  font-weight: 500;
   font-variant-numeric: tabular-nums;
 }
 
@@ -168,7 +170,7 @@ input, textarea, .selectable, .field-error, .problem span { -webkit-user-select:
 .button.express { background: var(--express); border-color: var(--express); color: var(--express-ink); }
 .button.express:hover:not(:disabled) { background: color-mix(in oklch, var(--express) 86%, var(--ink)); }
 
-.button.on-kraft { background: transparent; border-color: var(--kraft-line); color: var(--kraft-ink); }
+.button.on-kraft { background: transparent; border-color: color-mix(in oklch, var(--kraft-ink) 45%, var(--kraft)); color: var(--kraft-ink); }
 .button.on-kraft:hover:not(:disabled) { border-color: var(--kraft-ink); }
 .button.on-kraft:active:not(:disabled) { background: color-mix(in oklch, var(--kraft) 80%, var(--kraft-ink)); }
 
@@ -263,8 +265,11 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
   display: grid;
   place-items: center;
   color: var(--ink-2);
+  /* the initial is stamped, in the wide voice of the sender's name */
+  font-family: var(--display);
   font-size: var(--step-0);
-  font-weight: 650;
+  font-stretch: 125%;
+  font-weight: 800;
   line-height: 1;
 }
 /* macOS icons leave a tenth of their canvas free around the body; the
@@ -287,7 +292,7 @@ main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
 @starting-style { .stamp img { opacity: 0; } }
 .parcel[data-has-icon] .stamp::before,
 .parcel[data-has-icon] .initial { visibility: hidden; }
-.name { font-family: var(--display); font-size: var(--step-1); font-stretch: 100%; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.name { font-family: var(--display); font-size: var(--step-1); font-stretch: 110%; font-weight: 750; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .repo { color: var(--ink-2); font-size: var(--step--1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* the repository opens in the browser: it looks like the label it was and
    only shows it is a link under the pointer, as only as wide as its text */
@@ -330,8 +335,8 @@ a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; 
   border-radius: 3px;
   color: var(--ink-2);
   font-family: var(--display);
-  font-size: 0.625rem;
-  font-stretch: 87.5%;
+  font-size: 0.6875rem;
+  font-stretch: 75%;
   font-weight: 700;
   letter-spacing: 0.06em;
   line-height: 1.5;
@@ -353,7 +358,7 @@ a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; 
   /* field labels on a form: narrow capitals */
   font-family: var(--display);
   font-size: 0.6875rem;
-  font-stretch: 87.5%;
+  font-stretch: 75%;
   font-weight: 600;
   letter-spacing: 0.05em;
   line-height: 1.2;
