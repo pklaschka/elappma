@@ -2,9 +2,9 @@
 name: Lieferling
 description: A dispatch list for your own desktop apps, set like a parcel label.
 colors:
-  kraft: "light-dark(oklch(70% 0.075 68), oklch(37% 0.05 60))"
+  kraft: "light-dark(oklch(76% 0.07 70), oklch(37% 0.05 60))"
   kraft-ink: "light-dark(oklch(21% 0.03 55), oklch(95% 0.015 75))"
-  kraft-line: "light-dark(oklch(60% 0.07 65), oklch(46% 0.05 60))"
+  kraft-line: "light-dark(oklch(64% 0.07 65), oklch(46% 0.05 60))"
   label-stock: "light-dark(oklch(99.2% 0 0), oklch(19% 0.006 60))"
   well: "light-dark(oklch(96.2% 0.002 60), oklch(23.5% 0.006 60))"
   ink: "light-dark(oklch(18% 0.01 60), oklch(95% 0.004 75))"
@@ -18,14 +18,14 @@ colors:
   focus: "light-dark(oklch(50% 0.14 250), oklch(76% 0.12 250))"
 typography:
   headline:
-    fontFamily: "system-ui, -apple-system, sans-serif"
+    fontFamily: "'Archivo Variable', system-ui, sans-serif"
     fontSize: "1.25rem"
-    fontWeight: 750
-    letterSpacing: "-0.02em"
+    fontWeight: 800
+    letterSpacing: "0.02em"
   title:
-    fontFamily: "system-ui, -apple-system, sans-serif"
+    fontFamily: "'Archivo Variable', system-ui, sans-serif"
     fontSize: "1rem"
-    fontWeight: 650
+    fontWeight: 700
   tracking-number:
     fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace"
     fontSize: "1rem"
@@ -79,7 +79,7 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 ## Colors
 
 ### Primary
-- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it.
+- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it. The bar is real paper, not a flat fill: three noise layers drawn by the browser from inline SVG (`--kraft-mottle` a cloudy tone, `--kraft-grain` fine specks, `--kraft-fibres` a few short light fibres), retinted for dark mode (pale grain and dim fibres on dark kraft), with `color-interpolation-filters='sRGB'` so the tint does not depend on the engine. A 2px `kraft-line` edge closes the bar like the edge of a carton. Kept quiet enough that the bar text reads as if printed on it.
 
 ### Neutral
 - **Label stock** (`label-stock`): the window ground. **Well** (`well`): pressed and hovered surfaces.
@@ -96,17 +96,20 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 
 ## Typography
 
-System UI for everything a person reads, the mono stack for everything that is an identifier (versions, paths).
+Three voices. **Archivo** (variable, self-hosted from `@fontsource-variable/archivo`, OFL) is the printed voice of the label: the sender's name wide and in capitals, app names and dialog titles at normal width, field labels narrow and in capitals. System UI for running text and controls, so the window still sits next to macOS's own utilities. The mono stack for everything that is an identifier (versions, paths).
 
 ### Hierarchy
-- **Headline** (1.25rem, 750): the window name in the bar.
-- **Title** (1rem, 650): app name.
+- **Headline** (Archivo 1.25rem, 800, width 125%, capitals, +0.02em): the window name in the bar, like a sender's name printed on a box.
+- **Title** (Archivo 1rem, 750, width 110%): app name; dialog titles and the empty state's heading at normal width, 700.
+- **Stamp initial** (Archivo, 800, width 125%): the letter in an empty stamp field, stamped in the wordmark's voice. The bar's summary is Archivo 500, so the bar speaks in one voice.
 - **Tracking number** (mono 1rem, 600, +0.02em): installed → newest version.
 - **Body** (0.875rem / 1.45): everything else.
-- **Label** (0.75rem): repository, status text, footer; the route labels are 0.6875rem.
+- **Label** (0.75rem): repository, status text, footer.
+- **Field label** (Archivo 0.6875rem, 600, width 75%, capitals, +0.05em): the route stops; the "Vorab" tag the same at 700.
 
 ### Named Rules
 - **Numbers are mono.** A version or path is always set in `--mono`; prose never is.
+- **Archivo labels, system reads.** Archivo names things (the app, an app, a dialog, a field); sentences, buttons and inputs stay in the system face.
 
 ## Layout
 

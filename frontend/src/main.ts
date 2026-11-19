@@ -1,3 +1,4 @@
+import "@fontsource-variable/archivo/wdth.css";
 import {Clipboard, Events} from "@wailsio/runtime";
 import {AppService} from "../bindings/github.com/pklaschka/lieferling";
 import {type Command, CommandState} from "../bindings/github.com/pklaschka/lieferling/internal/install/models";
