@@ -161,6 +161,17 @@ function createRow(repo: string): HTMLLIElement {
     if (act === "link") copyLink(li, app);
   });
 
+  $<HTMLAnchorElement>(".repo", li).addEventListener("click", async (e) => {
+    e.preventDefault();
+    const href = (e.currentTarget as HTMLAnchorElement).href;
+    if (!href) return;
+    try {
+      await AppService.OpenURL(href);
+    } catch (err) {
+      showRowError(li, errorText(err));
+    }
+  });
+
   $<HTMLButtonElement>(".action", li).addEventListener("click", (e) => {
     const app = apps.find((a) => a.repo === li.dataset.repo);
     if ((e.currentTarget as HTMLElement).dataset.mode === "open") {
@@ -187,7 +198,11 @@ function fillRow(li: HTMLLIElement, app: Status) {
   li.dataset.state = state;
   $(".name", li).textContent = app.name;
   showIcon(li, app);
-  $(".repo", li).textContent = app.repo;
+  const repo = $<HTMLAnchorElement>(".repo", li);
+  repo.textContent = app.repo;
+  if (app.repoUrl) repo.href = app.repoUrl;
+  else repo.removeAttribute("href");
+  repo.title = app.repoUrl ? `${app.repoUrl} im Browser öffnen` : "";
   $(".installed", li).textContent = app.installed || "–";
   $(".latest", li).textContent = app.latest || "Kein Release erreichbar";
   $<HTMLElement>(".channel-tag", li).hidden = app.channel !== "prerelease";
