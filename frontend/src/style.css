@@ -19,9 +19,14 @@
   --express-soft: light-dark(oklch(95.5% 0.03 27), oklch(29% 0.07 27));
   --delivered: light-dark(oklch(44% 0.09 152), oklch(76% 0.11 152));
   --pending: light-dark(oklch(82% 0.004 60), oklch(38% 0.006 60));
-  --focus: light-dark(oklch(50% 0.14 250), oklch(76% 0.12 250));
+  /* focus is printed in ink, like everything else on the label */
+  --focus: var(--ink);
+  /* the edge of a control: darker than a cut line, so a button or field
+     holds 3:1 against the stock it sits on */
+  --edge: color-mix(in oklch, var(--ink-2) 70%, var(--stock));
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
 
-  --radius: 6px;
+  --radius: 4px;
   --step--1: 0.75rem;
   --step-0: 0.875rem;
   --step-1: 1rem;
@@ -39,7 +44,7 @@
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
 
   accent-color: var(--ink);
-  scrollbar-color: var(--cut) transparent;
+  scrollbar-color: var(--edge) transparent;
 }
 
 /* on dark kraft the grain is lighter than the paper, the fibres paler still */
@@ -153,40 +158,51 @@ input, textarea, .selectable, .field-error, .problem span { -webkit-user-select:
 /* ---- Controls ----------------------------------------------------------- */
 
 .button {
+  /* each variant sets these three; states only change them, so a hover or
+     press can never leak the look of one variant into another */
+  --bg: var(--stock);
+  --fg: var(--ink);
+  --bd: var(--edge);
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.375rem;
   min-block-size: 32px;
   padding: 0.25rem 0.8rem;
-  border: 1px solid var(--cut);
+  border: 1px solid var(--bd);
   border-radius: var(--radius);
-  background: var(--stock);
-  color: var(--ink);
+  background: var(--bg);
+  color: var(--fg);
+  /* buttons are labels: set in the label's printed voice */
   font: inherit;
-  font-weight: 600;
+  font-family: var(--display);
+  font-weight: 650;
+  letter-spacing: 0.01em;
   white-space: nowrap;
-  transition: background-color 150ms var(--ease), border-color 150ms var(--ease), color 150ms var(--ease);
+  transition: background-color 150ms var(--ease), border-color 150ms var(--ease), color 150ms var(--ease), translate 150ms var(--ease);
 }
-.button:hover:not(:disabled) { border-color: var(--ink-2); }
-.button:active:not(:disabled) { background: var(--well); }
-.button:disabled { opacity: 0.55; }
+.button:hover:not(:disabled), .button:has(+ .menu:popover-open) { --bd: var(--ink); }
+.button:active:not(:disabled) { --bg: var(--well); translate: 0 1px; }
+.button:disabled { opacity: 0.55; border-style: dashed; }
 
-.button.ink { background: var(--ink); border-color: var(--ink); color: var(--stock); }
-.button.ink:hover:not(:disabled) { background: color-mix(in oklch, var(--ink) 82%, var(--stock)); }
+.button.ink { --bg: var(--ink); --bd: var(--ink); --fg: var(--stock); }
+.button.ink:hover:not(:disabled) { --bg: color-mix(in oklch, var(--ink) 82%, var(--stock)); --bd: var(--bg); }
+.button.ink:active:not(:disabled) { --bg: color-mix(in oklch, var(--ink) 70%, var(--stock)); --bd: var(--bg); }
 
-.button.express { background: var(--express); border-color: var(--express); color: var(--express-ink); }
-.button.express:hover:not(:disabled) { background: color-mix(in oklch, var(--express) 86%, var(--ink)); }
+.button.express { --bg: var(--express); --bd: var(--express); --fg: var(--express-ink); }
+.button.express:hover:not(:disabled) { --bg: color-mix(in oklch, var(--express) 86%, var(--ink)); --bd: var(--bg); }
+.button.express:active:not(:disabled) { --bg: color-mix(in oklch, var(--express) 76%, var(--ink)); --bd: var(--bg); }
+.button:is(.ink, .express):disabled { border-style: solid; }
 
-.button.on-kraft { background: transparent; border-color: color-mix(in oklch, var(--kraft-ink) 45%, var(--kraft)); color: var(--kraft-ink); }
-.button.on-kraft:hover:not(:disabled) { border-color: var(--kraft-ink); }
-.button.on-kraft:active:not(:disabled) { background: color-mix(in oklch, var(--kraft) 80%, var(--kraft-ink)); }
+.button.on-kraft { --bg: transparent; --fg: var(--kraft-ink); --bd: color-mix(in oklch, var(--kraft-ink) 55%, var(--kraft)); }
+.button.on-kraft:is(:hover:not(:disabled), :has(+ .menu:popover-open)) { --bd: var(--kraft-ink); --bg: color-mix(in oklch, var(--kraft-ink) 8%, transparent); }
+.button.on-kraft:active:not(:disabled) { --bg: color-mix(in oklch, var(--kraft-ink) 16%, transparent); }
 
-.button.danger { color: var(--express); }
-.button.danger:hover:not(:disabled) { border-color: var(--express); background: var(--express-soft); }
+.button.danger { --fg: var(--express); }
+.button.danger:hover:not(:disabled) { --bd: var(--express); --bg: var(--express-soft); }
 
-.button.icon-only { padding-inline: 0.45rem; border-color: transparent; background: transparent; color: var(--ink-2); }
-.button.icon-only:hover { color: var(--ink); border-color: var(--cut); }
+.button.icon-only { inline-size: 32px; padding: 0; --bd: transparent; --bg: transparent; --fg: var(--ink-2); }
+.button.icon-only:is(:hover:not(:disabled), :has(+ .menu:popover-open)) { --bd: transparent; --bg: var(--well); --fg: var(--ink); }
 
 .button[aria-busy="true"] .icon { animation: spin 0.9s linear infinite; }
 @keyframes spin { to { rotate: 1turn; } }
@@ -196,17 +212,51 @@ input:is([type="text"], [type="url"]) {
   min-inline-size: 0;
   min-block-size: 32px;
   padding: 0.25rem 0.7rem;
-  border: 1px solid var(--cut);
+  border: 1px solid var(--edge);
   border-radius: var(--radius);
   background: var(--stock);
   color: var(--ink);
   font: inherit;
 }
+/* a long hint ends in an ellipsis instead of a cut-off letter */
+input:placeholder-shown { text-overflow: ellipsis; }
+/* focused, the field's own frame thickens to ink: no second box around it */
+input:is([type="text"], [type="url"]):focus-visible { border-color: var(--ink); outline-offset: -1px; }
 input:is([type="text"], [type="url"]):user-invalid,
-input:is([type="text"], [type="url"])[aria-invalid="true"] { border-color: var(--express); }
+input:is([type="text"], [type="url"])[aria-invalid="true"] { border-color: var(--express); outline-color: var(--express); }
 
 .check { display: inline-flex; align-items: center; gap: 0.375rem; color: var(--ink-2); white-space: nowrap; }
-.check input { margin: 0; }
+.check input {
+  /* a tick box drawn in ink: WebKit before Safari 26.2 ignores accent-color
+     and would paint the system blue */
+  appearance: none;
+  display: inline-grid;
+  place-content: center;
+  flex: none;
+  inline-size: 1rem;
+  aspect-ratio: 1;
+  margin: 0;
+  border: 1px solid var(--edge);
+  border-radius: 3px;
+  background: var(--stock);
+  transition: background-color 120ms var(--ease), border-color 120ms var(--ease);
+}
+.check input::before {
+  content: "";
+  inline-size: 0.75rem;
+  aspect-ratio: 1;
+  background: var(--stock);
+  mask: var(--tick) center / contain no-repeat;
+  scale: 0;
+  transition: scale 120ms var(--ease);
+}
+.check input:hover:not(:disabled) { border-color: var(--ink); }
+.check input:checked { background: var(--ink); border-color: var(--ink); }
+.check input:checked::before { scale: 1; }
+.check input:disabled { opacity: 0.5; }
+@media (forced-colors: active) {
+  .check input::before { background: CanvasText; }
+}
 
 /* ---- Add strip ---------------------------------------------------------- */
 
@@ -311,6 +361,7 @@ a.repo {
   border-radius: 2px;
 }
 a.repo[href] { cursor: pointer; }
+a.repo:focus-visible { outline-offset: 1px; }
 a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; }
 
 .shipment { display: grid; gap: 0.375rem; justify-items: start; }
@@ -460,28 +511,35 @@ a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; 
   padding: 0.3rem;
   border: 1px solid var(--cut);
   border-radius: var(--radius);
-  background: var(--stock);
+  /* in the dark the sheet lifts off the page by a step of grey */
+  background: light-dark(var(--stock), var(--well));
   color: var(--ink);
+  transition: opacity 120ms var(--ease), translate 120ms var(--ease);
   box-shadow: 0 10px 28px -10px oklch(0% 0 0 / 0.35), 0 2px 6px -2px oklch(0% 0 0 / 0.2);
 }
 .menu:popover-open { display: grid; }
+@starting-style { .menu:popover-open { opacity: 0; translate: 0 -3px; } }
 .menu button {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.6rem 0.35rem 0.4rem;
   border: 0;
-  border-radius: 4px;
+  border-radius: 2px;
   background: transparent;
   color: inherit;
   font: inherit;
   text-align: start;
 }
-.menu button:not(:has(.tick)) { padding-inline-start: calc(0.4rem + 1em + 0.5rem); }
+.menu:has(.tick) button:not(:has(.tick)) { padding-inline-start: calc(0.4rem + 1em + 0.5rem); }
+.menu:not(:has(.tick)) button { padding-inline-start: 0.6rem; }
 .menu .tick { visibility: hidden; }
 .menu [aria-checked="true"] .tick { visibility: visible; }
-.menu button:hover:not(:disabled), .menu button:focus-visible { background: var(--well); outline: none; }
-.menu button:disabled { color: var(--ink-2); }
+.menu button:hover:not(:disabled) { background: var(--well); }
+/* the keyboard's place is printed solid, the pointer's only shaded */
+.menu button:focus-visible { background: var(--ink); color: var(--stock); outline: none; }
+.menu .danger:focus-visible { background: var(--express); color: var(--express-ink); }
+.menu button:disabled { color: color-mix(in oklch, var(--ink-2) 55%, var(--stock)); }
 .menu .danger { color: var(--express); }
 .menu hr { margin: 0.25rem 0.4rem; border: 0; border-block-start: 1px solid var(--cut); }
 
@@ -642,7 +700,7 @@ dialog .check + .check { margin-block-start: 0.5rem; }
 .manifest-note { margin-inline-start: auto; color: var(--ink-2); font-size: var(--step--1); }
 .manifest [data-state="known"] .check { color: var(--ink-2); }
 .manifest [data-state="invalid"] .check { color: var(--ink-2); }
-.manifest [data-state="invalid"] .manifest-note { flex-basis: 100%; margin-inline-start: calc(13px + 0.375rem); color: var(--express); }
+.manifest [data-state="invalid"] .manifest-note { flex-basis: 100%; margin-inline-start: calc(1rem + 0.375rem); color: var(--express); }
 #import-note { margin: 0.75rem 0 0; font-size: var(--step--1); }
 #import-note:empty { display: none; }
 /* the command line: which link goes where */
@@ -716,6 +774,7 @@ dialog p.command-link { color: var(--ink); }
   .bar { padding-inline-start: 5rem; }
   .summary:not([data-note]) { display: none; }
   .add input[type="text"] { flex-basis: 100%; }
+  .add .button { margin-inline-start: auto; }
   .parcels { grid-template-columns: minmax(0, 1fr) auto auto; }
   .who { grid-column: 1; grid-row: 1; }
   .action-cell { grid-column: 2; grid-row: 1; min-inline-size: 0; }
