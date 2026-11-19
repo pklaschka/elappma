@@ -53,7 +53,9 @@ func New() *Store {
 type Status struct {
 	Repo string `json:"repo"`
 	// Forge names where the repository lives: GitHub, Codeberg or a host.
-	Forge     string `json:"forge"`
+	Forge string `json:"forge"`
+	// RepoURL is the repository's page in the browser.
+	RepoURL   string `json:"repoUrl"`
 	Name      string `json:"name"`
 	Channel   string `json:"channel"`
 	Installed string `json:"installed"` // version here, "" when not installed
@@ -234,7 +236,7 @@ func (s *Store) status(ctx context.Context, a config.App, st state.State) Status
 		out.Channel = pick.Stable
 	}
 	if r, err := forge.ParseRepo(a.Repo); err == nil {
-		out.Forge = r.Forge()
+		out.Forge, out.RepoURL = r.Forge(), r.WebURL()
 		if out.Name == "" {
 			out.Name = r.Name
 		}

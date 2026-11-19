@@ -29,6 +29,22 @@ func TestForgeName(t *testing.T) {
 	}
 }
 
+func TestWebURL(t *testing.T) {
+	for repo, want := range map[string]string{
+		"owner/name":               "https://github.com/owner/name",
+		"codeberg.org/o/n":         "https://codeberg.org/o/n",
+		"git.example.com:3000/o/n": "https://git.example.com:3000/o/n",
+	} {
+		r, err := ParseRepo(repo)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := r.WebURL(); got != want {
+			t.Errorf("%s: %s, want %s", repo, got, want)
+		}
+	}
+}
+
 func TestTokenVariable(t *testing.T) {
 	if got := TokenVariable("git.example.com:3000"); got != "LIEFERLING_TOKEN_GIT_EXAMPLE_COM_3000" {
 		t.Error(got)

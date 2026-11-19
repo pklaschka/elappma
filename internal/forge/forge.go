@@ -141,6 +141,9 @@ func (r Repo) String() string {
 // Path is owner/name.
 func (r Repo) Path() string { return r.Owner + "/" + r.Name }
 
+// WebURL is the repository's page in the browser.
+func (r Repo) WebURL() string { return "https://" + r.WebHost() + "/" + r.Path() }
+
 // WebHost is the host of the repository's web pages.
 func (r Repo) WebHost() string {
 	if r.Host == "" {
