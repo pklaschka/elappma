@@ -719,16 +719,20 @@ function withCode(el: HTMLElement, text: string) {
   }));
 }
 
+// setPath writes a path that breaks after a slash rather than inside a name.
+function setPath(el: HTMLElement, path: string) {
+  el.replaceChildren(...path.split("/").flatMap((part, i) =>
+    i === 0 ? [part] : [document.createElement("wbr"), "/" + part]));
+}
+
 function showCommand(c: Command) {
   const copy = commandCopy[c.state] ?? commandCopy[CommandState.CommandUnavailable];
   commandDialog.dataset.state = c.state;
   $("#command-title", commandDialog).textContent = copy.title;
   withCode($("#command-note", commandDialog), copy.note);
-  $(".from", commandDialog).textContent = c.path;
-  // long paths break after a slash, never inside a name
   const to = c.state === CommandState.CommandOther ? c.other || "eine eigene Datei, kein Verweis" : c.bundled;
-  $(".to", commandDialog).replaceChildren(...to.split("/").flatMap((part, i) =>
-    i === 0 ? [part] : [document.createElement("wbr"), "/" + part]));
+  setPath($(".from", commandDialog), c.path);
+  setPath($(".to", commandDialog), to);
   $(".manual", commandDialog).textContent = c.manual;
   if (c.state === CommandState.CommandLinked || !c.manual) commandManual.hidden = true;
   for (const b of commandDialog.querySelectorAll<HTMLButtonElement>("[data-show]")) {
