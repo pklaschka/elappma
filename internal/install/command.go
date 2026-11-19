@@ -2,6 +2,7 @@ package install
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -36,6 +37,9 @@ type Command struct {
 	Bundled string `json:"bundled"`
 	// Other is where a foreign link at Path points, or "" for a plain file.
 	Other string `json:"other"`
+	// Manual is the same setup as a command for the Terminal, for when the
+	// password dialog does not work out; "" without a bundled command line.
+	Manual string `json:"manual"`
 }
 
 // BundledCommand returns the command line in the app bundle (see
@@ -53,7 +57,7 @@ func BundledCommand(bundle string) string {
 
 // CommandStatus looks at path and compares it with the bundled command line.
 func CommandStatus(bundled, path string) Command {
-	c := Command{Path: path, Bundled: bundled}
+	c := Command{Path: path, Bundled: bundled, Manual: ManualCommand(bundled, path)}
 	st, err := os.Lstat(path)
 	switch {
 	case err != nil:
@@ -71,4 +75,14 @@ func CommandStatus(bundled, path string) Command {
 		c.State = CommandUnavailable
 	}
 	return c
+}
+
+// ManualCommand returns the shell command that does what LinkCommand does,
+// with sudo, or "" when there is nothing to link.
+func ManualCommand(bundled, path string) string {
+	if bundled == "" {
+		return ""
+	}
+	return fmt.Sprintf("sudo mkdir -p %s && sudo ln -sf %s %s",
+		shellQuote(filepath.Dir(path)), shellQuote(bundled), shellQuote(path))
 }

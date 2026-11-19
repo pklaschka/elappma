@@ -186,6 +186,10 @@
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Abbrechen</button>
         <button value="ok" class="button ink"></button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog id="command" aria-labelledby="command-title" aria-describedby="command-note">
     <form method="dialog">
       <h2 id="command-title"></h2>
@@ -196,7 +200,15 @@
         <svg class="icon arrow" aria-hidden="true"><use href="#i-arrow"/></svg>
         <code class="to"></code>
       </p>
+      <p class="command-wait" hidden>Gib dein Passwort im Fenster von macOS ein. Abbrechen geht jederzeit.</p>
       <p class="field-error" role="alert"></p>
+      <div class="command-manual" hidden>
+        <p>Im Terminal geht es auch, mit demselben Ergebnis:</p>
+        <div class="manual-line">
+          <code class="manual"></code>
+          <button type="button" class="button copy-manual">Kopieren</button>
+        </div>
+      </div>
       <div class="dialog-actions">
         <button value="remove" class="button danger" data-show="linked">Entfernen</button>
         <button value="cancel" class="button" data-show="missing other"></button>

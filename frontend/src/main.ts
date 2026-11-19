@@ -729,6 +729,8 @@ function showCommand(c: Command) {
   const to = c.state === CommandState.CommandOther ? c.other || "eine eigene Datei, kein Verweis" : c.bundled;
   $(".to", commandDialog).replaceChildren(...to.split("/").flatMap((part, i) =>
     i === 0 ? [part] : [document.createElement("wbr"), "/" + part]));
+  $(".manual", commandDialog).textContent = c.manual;
+  if (c.state === CommandState.CommandLinked || !c.manual) commandManual.hidden = true;
   for (const b of commandDialog.querySelectorAll<HTMLButtonElement>("[data-show]")) {
     b.hidden = !b.dataset.show!.split(" ").includes(c.state);
   }
@@ -745,6 +747,7 @@ function focusCommandDefault() {
 
 async function openCommand() {
   commandError.textContent = "";
+  commandManual.hidden = true;
   try {
     showCommand(await AppService.CommandLine());
   } catch (err) {
@@ -754,32 +757,61 @@ async function openCommand() {
   focusCommandDefault();
 }
 
-// the work happens with the dialog open: macOS asks for the password on top
-async function runCommand(button: HTMLButtonElement, busyText: string, work: () => Promise<Command>) {
+const commandWait = $<HTMLParagraphElement>(".command-wait", commandDialog);
+const commandManual = $<HTMLDivElement>(".command-manual", commandDialog);
+let commandCall: {cancel(): void} | undefined;
+
+// the work happens with the dialog open: macOS asks for the password on top.
+// Abbrechen stays live and stops the wait, so the window never hangs on a
+// password dialog that did not show up.
+async function runCommand(button: HTMLButtonElement, busyText: string, call: () => Promise<Command | null> & {cancel(): void}) {
   const label = button.textContent;
   commandError.textContent = "";
-  for (const b of commandDialog.querySelectorAll("button")) b.disabled = true;
+  commandManual.hidden = true;
+  for (const b of commandDialog.querySelectorAll<HTMLButtonElement>("button:not([value=cancel])")) b.disabled = true;
   button.setAttribute("aria-busy", "true");
   button.textContent = busyText;
+  commandWait.hidden = false;
+  const p = call();
+  commandCall = p;
   try {
-    showCommand(await work());
+    const c = await p;
+    if (c) showCommand(c);
   } catch (err) {
     button.textContent = label;
+    if (commandCall !== p) return; // canceled
     commandError.textContent = errorText(err);
+    commandManual.hidden = !$(".manual", commandDialog).textContent || button !== commandInstall;
   } finally {
+    if (commandCall === p) commandCall = undefined;
+    commandWait.hidden = true;
     button.removeAttribute("aria-busy");
+    button.textContent = button.textContent === busyText ? label : button.textContent;
     for (const b of commandDialog.querySelectorAll("button")) b.disabled = false;
-    focusCommandDefault();
+    if (commandDialog.open) focusCommandDefault();
   }
+}
+
+function cancelCommand() {
+  const p = commandCall;
+  commandCall = undefined;
+  p?.cancel();
 }
 
 commandInstall.addEventListener("click", (e) => {
   e.preventDefault();
-  runCommand(commandInstall, "Wird installiert …", async () => (await AppService.InstallCommandLine())!);
+  runCommand(commandInstall, "Wird installiert …", () => AppService.InstallCommandLine());
 });
 commandRemove.addEventListener("click", (e) => {
   e.preventDefault();
-  runCommand(commandRemove, "Wird entfernt …", async () => (await AppService.RemoveCommandLine())!);
+  runCommand(commandRemove, "Wird entfernt …", () => AppService.RemoveCommandLine());
+});
+commandDialog.addEventListener("close", cancelCommand);
+$(".copy-manual", commandDialog).addEventListener("click", async (e) => {
+  const b = e.currentTarget as HTMLButtonElement;
+  await Clipboard.SetText($(".manual", commandDialog).textContent ?? "");
+  b.textContent = "Kopiert";
+  setTimeout(() => (b.textContent = "Kopieren"), 1800);
 });
 
 $("#open-command").addEventListener("click", openCommand);
