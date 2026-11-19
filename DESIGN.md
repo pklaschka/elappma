@@ -18,14 +18,14 @@ colors:
   focus: "light-dark(oklch(50% 0.14 250), oklch(76% 0.12 250))"
 typography:
   headline:
-    fontFamily: "system-ui, -apple-system, sans-serif"
+    fontFamily: "'Archivo Variable', system-ui, sans-serif"
     fontSize: "1.25rem"
-    fontWeight: 750
-    letterSpacing: "-0.02em"
+    fontWeight: 800
+    letterSpacing: "0.02em"
   title:
-    fontFamily: "system-ui, -apple-system, sans-serif"
+    fontFamily: "'Archivo Variable', system-ui, sans-serif"
     fontSize: "1rem"
-    fontWeight: 650
+    fontWeight: 700
   tracking-number:
     fontFamily: "ui-monospace, 'SF Mono', Menlo, monospace"
     fontSize: "1rem"
@@ -79,7 +79,7 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 ## Colors
 
 ### Primary
-- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it.
+- **Kraft** (`kraft`): the title bar only, the paper the label sits on. Its own ink (`kraft-ink`) and rule (`kraft-line`) belong to it. The bar is real paper, not a flat fill: three noise layers drawn by the browser from inline SVG (`--kraft-mottle` a cloudy tone, `--kraft-grain` fine specks, `--kraft-fibres` a few short light fibres), retinted for dark mode. Kept quiet enough that the bar text reads as if printed on it.
 
 ### Neutral
 - **Label stock** (`label-stock`): the window ground. **Well** (`well`): pressed and hovered surfaces.
@@ -96,17 +96,19 @@ Mood: practical, printed, a little warm. Not a store front, not a dashboard, no 
 
 ## Typography
 
-System UI for everything a person reads, the mono stack for everything that is an identifier (versions, paths).
+Three voices. **Archivo** (variable, self-hosted from `@fontsource-variable/archivo`, OFL) is the printed voice of the label: the sender's name wide and in capitals, app names and dialog titles at normal width, field labels narrow and in capitals. System UI for running text and controls, so the window still sits next to macOS's own utilities. The mono stack for everything that is an identifier (versions, paths).
 
 ### Hierarchy
-- **Headline** (1.25rem, 750): the window name in the bar.
-- **Title** (1rem, 650): app name.
+- **Headline** (Archivo 1.25rem, 800, width 125%, capitals, +0.02em): the window name in the bar, like a sender's name printed on a box.
+- **Title** (Archivo 1rem, 700): app name, dialog titles; the empty state's heading at 1.25rem.
 - **Tracking number** (mono 1rem, 600, +0.02em): installed → newest version.
 - **Body** (0.875rem / 1.45): everything else.
-- **Label** (0.75rem): repository, status text, footer; the route labels are 0.6875rem.
+- **Label** (0.75rem): repository, status text, footer.
+- **Field label** (Archivo 0.6875rem, 600, width 87.5%, capitals, +0.05em): the route stops; the "Vorab" tag the same at 0.625rem, 700.
 
 ### Named Rules
 - **Numbers are mono.** A version or path is always set in `--mono`; prose never is.
+- **Archivo labels, system reads.** Archivo names things (the app, an app, a dialog, a field); sentences, buttons and inputs stay in the system face.
 
 ## Layout
 
