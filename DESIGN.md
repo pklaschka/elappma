@@ -2,9 +2,9 @@
 name: Lieferling
 description: A dispatch list for your own desktop apps, set like a parcel label.
 colors:
-  kraft: "light-dark(oklch(70% 0.075 68), oklch(37% 0.05 60))"
+  kraft: "light-dark(oklch(76% 0.07 70), oklch(37% 0.05 60))"
   kraft-ink: "light-dark(oklch(21% 0.03 55), oklch(95% 0.015 75))"
-  kraft-line: "light-dark(oklch(60% 0.07 65), oklch(46% 0.05 60))"
+  kraft-line: "light-dark(oklch(64% 0.07 65), oklch(46% 0.05 60))"
   label-stock: "light-dark(oklch(99.2% 0 0), oklch(19% 0.006 60))"
   well: "light-dark(oklch(96.2% 0.002 60), oklch(23.5% 0.006 60))"
   ink: "light-dark(oklch(18% 0.01 60), oklch(95% 0.004 75))"

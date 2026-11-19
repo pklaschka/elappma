@@ -19,8 +19,10 @@
   </svg>
 
   <header class="bar">
-    <h1>Lieferling</h1>
-    <p id="summary" class="summary" aria-live="polite"></p>
+    <div class="bar-title">
+      <h1>Lieferling</h1>
+      <p id="summary" class="summary" aria-live="polite"></p>
+    </div>
     <div class="bar-actions">
       <button type="button" id="update-all" class="button express" hidden>Alle aktualisieren</button>
       <button type="button" id="refresh" class="button on-kraft">
@@ -72,7 +74,7 @@
 
   <footer class="foot">
     <span class="foot-list">Liste: <span id="config-path" class="path"></span></span>
-    <button type="button" id="open-command" class="foot-action">Kommandozeilen-Tool …</button>
+    <button type="button" id="open-command" class="foot-action">Im Terminal nutzen …</button>
   </footer>
 
   <template id="row">
