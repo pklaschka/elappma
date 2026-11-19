@@ -186,7 +186,7 @@ input:is([type="text"], [type="url"])[aria-invalid="true"] { border-color: var(-
   border-block-end: 1px solid var(--cut);
 }
 .field-error:empty { display: none; }
-.field-error { flex-basis: 100%; margin: 0; color: var(--express); font-size: var(--step--1); }
+.field-error { flex-basis: 100%; margin: 0; color: var(--express); font-size: var(--step--1); overflow-wrap: break-word; }
 
 main { display: contents; }
 main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
@@ -609,7 +609,10 @@ dialog p.command-link { color: var(--ink); }
 .command-link .tick { visibility: hidden; color: var(--delivered); stroke-width: 2.2; }
 #command[data-state="linked"] .command-link .tick { visibility: visible; }
 #command[data-state="unavailable"] .command-link { display: none; }
-#command p code { white-space: nowrap; }
+/* the command and the folder in the note stay on one line; the paths in
+   the link box break after a slash instead (see showCommand) */
+#command-note code { white-space: nowrap; }
+.command-link code { overflow-wrap: break-word; }
 #command .dialog-actions [value="remove"] { margin-inline-end: auto; }
 #command .field-error { margin-block-start: 0.75rem; }
 #command p.command-wait { margin: 0.75rem 0 0; font-size: var(--step--1); }
