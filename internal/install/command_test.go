@@ -38,6 +38,12 @@ func TestCommandStatus(t *testing.T) {
 		}
 	}
 	check("nothing there", bundled, CommandMissing, "")
+	if got, want := CommandStatus(bundled, link).Manual, "sudo mkdir -p '"+bin+"' && sudo ln -sf '"+bundled+"' '"+link+"'"; got != want {
+		t.Errorf("Manual = %q, want %q", got, want)
+	}
+	if got := CommandStatus("", link).Manual; got != "" {
+		t.Errorf("Manual without a command = %q", got)
+	}
 	check("dev build", "", CommandUnavailable, "")
 
 	if err := os.Symlink(bundled, link); err != nil {

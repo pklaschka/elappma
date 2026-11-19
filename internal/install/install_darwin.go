@@ -137,7 +137,10 @@ func shell(ctx context.Context, script string, admin, interactive bool, prompt s
 		if prompt != "" {
 			as += ` with prompt "` + esc(prompt) + `"`
 		}
-		err := run(ctx, "osascript", "-e", as)
+		// osascript asks from the background, so macOS can put the password
+		// dialog behind Lieferling's window, where it looks as if nothing
+		// happens: bring it to the front first.
+		err := run(ctx, "osascript", "-e", "activate", "-e", as)
 		if err != nil && strings.Contains(err.Error(), "(-128)") {
 			return ErrCanceled
 		}
