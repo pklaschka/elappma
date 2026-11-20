@@ -128,7 +128,7 @@ export const busy: Set<string>;                               // Repos, die gera
 
 ```ts
 export const $: <T extends Element>(sel: string, root?: ParentNode) => T;   // unverändert
-export function clone<T extends HTMLElement>(templateId: string): T;        // erstes Element der Vorlage
+export function clone<T extends Element>(template: HTMLTemplateElement): T; // erstes Element der Vorlage
 
 export function errorText(err: unknown): string;                            // unverändert
 export function plural(n: number, one: string, many: string): string;       // unverändert
@@ -189,8 +189,7 @@ Damit entfallen `removing`, `linked` und `planned`. Ein Nebeneffekt, der gewollt
 
 ```ts
 export interface PickItem {
-  value: string;        // Wert des Kästchens
-  label: string;
+  value: string;        // Wert des Kästchens, zugleich die Beschriftung
   tag?: boolean;        // zeigt das Kennzeichen der Vorlage (»Vorab«)
   note?: string;        // rechts, oder bei state "invalid" als eigene Zeile
   state: string;        // data-state der Zeile: heute "new", "known", "invalid"
@@ -273,11 +272,11 @@ load().then(takeLink);
 
 ### `index.html`
 
-Inhalt bleibt, drei Änderungen:
+Inhalt bleibt, zwei Änderungen (die dritte ist zurückgestellt):
 
 1. `<link rel="stylesheet" href="/src/styles/index.css">`.
 2. `.problem` bekommt `data-section="problem"`.
-3. Reihenfolge mit Kommentarköpfen: Sprite, Fenster, Vorlagen (`#row`, `#ghost`, `#manifest-item`), dann die Dialoge je Feature. Die Reihenfolge der Dialoge untereinander ist ohne Wirkung, sie liegen im Top Layer.
+3. Zurückgestellt, damit der Umbau leicht zu prüfen bleibt: Reihenfolge mit Kommentarköpfen: Sprite, Fenster, Vorlagen (`#row`, `#ghost`, `#manifest-item`), dann die Dialoge je Feature. Die Reihenfolge der Dialoge untereinander ist ohne Wirkung, sie liegen im Top Layer.
 
 Nach der Änderung die Tags auszählen (siehe Prüfplan): Ein früherer Merge hat einen Dialog durch fehlende schließende Tags zerstört.
 
@@ -425,13 +424,11 @@ Reines Verteilen auf Dateien, keine Änderung an Signaturen: Die Bindings müsse
 Alle mit `refactor:`, jeder für sich baubar und geprüft:
 
 1. `refactor(frontend): split the stylesheet by section` — `styles/`, `index.html`-Link, `[data-section]`-Regel.
-2. `refactor(frontend): move shared helpers and state out of main.ts` — `backend.ts`, `state.ts`, `lib/dom.ts`, `lib/text.ts`, `lib/menu.ts`; `main.ts` nutzt sie, bleibt sonst eine Datei.
-3. `refactor(frontend): split main.ts into feature modules` — `features/*`, `rowAction`, `rowSection`, `setup…()`.
-4. `refactor(frontend): answer dialogs through ask and share the pick list` — `lib/dialog.ts`, `lib/picklist.ts`, `index.html` gruppiert.
-5. `refactor(forge): map HTTP answers to errors in one place`
-6. `refactor(install): unpack and place as separate steps`
-7. `refactor(store): split the store by topic and the install into steps`
-8. `refactor: split the service and the command line by topic`
+2. `refactor(frontend): split main.ts into feature modules` — `backend.ts`, `state.ts`, `lib/*` mit `ask` und der Auswahlliste, `features/*`, `rowAction`, `rowSection`, `setup…()`. (Geplant waren hier drei Commits; Zwischenstände hätten Code gebraucht, der gleich wieder wegfällt.)
+3. `refactor(forge): map HTTP answers to errors in one place`
+4. `refactor(install): unpack and place as separate steps`
+5. `refactor(store): split the store by topic and the install into steps`
+6. `refactor: split the service and the command line by topic`
 
 ## Prüfplan
 
