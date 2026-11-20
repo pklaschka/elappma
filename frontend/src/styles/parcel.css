@@ -1,0 +1,221 @@
+main { display: contents; }
+main > section { grid-row: 3; overflow-y: auto; padding: 0 1rem; }
+
+/* ---- Parcel rows -------------------------------------------------------- */
+
+.parcels {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(8rem, 1fr) auto auto auto;
+  column-gap: 1.25rem;
+}
+
+.parcel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+  row-gap: 0.375rem;
+  padding-block: 1rem;
+  border-block-end: 1px dashed var(--cut);
+}
+
+.who {
+  display: grid;
+  grid-template-columns: var(--stamp) minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-content: center;
+  column-gap: 0.75rem;
+  min-inline-size: 0;
+}
+.who > :not(.stamp, .stamp-slip) { grid-column: 2; }
+
+/* The stamp field: where a parcel label carries its postage, the parcel
+   carries the app's own icon. Until it arrives, or when the app has none,
+   the empty field shows the app's initial inside a dashed frame. */
+.parcels { --stamp: 2.25rem; }
+.stamp, .stamp-slip {
+  grid-row: 1 / span 2;
+  grid-column: 1;
+  inline-size: var(--stamp);
+  block-size: var(--stamp);
+  margin: 0;
+}
+.stamp {
+  position: relative;
+  display: grid;
+  place-items: center;
+  color: var(--ink-2);
+  /* the initial is stamped, in the wide voice of the sender's name */
+  font-family: var(--display);
+  font-size: var(--step-0);
+  font-stretch: 125%;
+  font-weight: 800;
+  line-height: 1;
+}
+/* macOS icons leave a tenth of their canvas free around the body; the
+   frame sits on the same grid so empty and filled stamps line up */
+.stamp::before {
+  content: "";
+  position: absolute;
+  inset: 10%;
+  border: 1px dashed var(--cut);
+  border-radius: 7px;
+}
+.stamp img {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: contain;
+  transition: opacity 200ms var(--ease);
+}
+@starting-style { .stamp img { opacity: 0; } }
+.parcel[data-has-icon] .stamp::before,
+.parcel[data-has-icon] .initial { visibility: hidden; }
+.name { font-family: var(--display); font-size: var(--step-1); font-stretch: 110%; font-weight: 750; letter-spacing: -0.005em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.repo { color: var(--ink-2); font-size: var(--step--1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* the repository opens in the browser: it looks like the label it was and
+   only shows it is a link under the pointer, as only as wide as its text */
+a.repo {
+  justify-self: start;
+  max-inline-size: 100%;
+  text-decoration: none;
+  border-radius: 2px;
+}
+a.repo[href] { cursor: pointer; }
+a.repo:focus-visible { outline-offset: 1px; }
+a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; }
+
+.shipment { display: grid; gap: 0.375rem; justify-items: start; }
+
+/* the tracking number */
+.number {
+  display: flex;
+  align-items: baseline;
+  gap: 0.4rem;
+  margin: 0;
+  font-family: var(--mono);
+  font-size: var(--step-1);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.number .arrow { align-self: center; color: var(--ink-2); }
+.number .installed { color: var(--ink-2); }
+.parcel[data-state="current"] .installed { color: var(--ink); }
+.parcel[data-state="update"] .latest { color: var(--express); }
+.parcel:not([data-state="update"]) .arrow,
+.parcel[data-state="current"] .latest,
+.parcel[data-state="missing"] .installed { display: none; }
+.parcel[data-state="missing"] .latest { color: var(--ink); }
+
+.channel-tag {
+  align-self: center;
+  padding: 0 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  color: var(--ink-2);
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+
+/* the tracking strip: three stops on one line */
+.route {
+  --progress: 0;
+  --released: var(--pending);
+  --loaded: var(--pending);
+  --installed: var(--pending);
+  display: grid;
+  grid-template-columns: repeat(3, 5.25rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-2);
+  /* field labels on a form: narrow capitals */
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+.route li {
+  position: relative;
+  padding-block-start: 0.875rem;
+}
+/* the stop */
+.route li::before {
+  content: "";
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  inline-size: 9px;
+  block-size: 9px;
+  border-radius: 50%;
+  background: var(--stop);
+  box-shadow: 0 0 0 2px var(--stock);
+  z-index: 1;
+}
+/* the leg to the next stop */
+.route li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset-block-start: 3.5px;
+  inset-inline: 4px 0;
+  block-size: 2px;
+  background: linear-gradient(to right, var(--leg-done) calc(var(--leg) * 100%), var(--pending) 0);
+}
+.route [data-stop="released"] { --stop: var(--released); --leg: var(--leg1, 0); }
+.route [data-stop="loaded"] { --stop: var(--loaded); --leg: var(--leg2, 0); }
+.route [data-stop="installed"] { --stop: var(--installed); }
+.route { --leg-done: var(--delivered); }
+
+.parcel[data-state="current"] .route {
+  --released: var(--delivered); --loaded: var(--delivered); --installed: var(--delivered);
+  --leg1: 1; --leg2: 1;
+  color: var(--ink);
+}
+.parcel[data-state="missing"] .route { --released: var(--ink); }
+.parcel[data-state="missing"] .route [data-stop="released"] { color: var(--ink); }
+.parcel[data-state="update"] .route { --released: var(--express); }
+.parcel[data-state="update"] .route [data-stop="released"] { color: var(--express); font-weight: 600; }
+.parcel[data-state="failed"] .route { --released: var(--express); }
+
+/* travelling: the first leg fills with the download, then Geladen lands */
+.parcel[data-busy] .route { --leg-done: var(--ink); --leg1: var(--progress); }
+.parcel[data-busy] .route li:first-child::after { transition: background 0s; }
+.parcel[data-busy="install"] .route { --leg1: 1; --loaded: var(--ink); --leg2: 0.5; }
+.parcel[data-busy] .route [data-stop="loaded"]::before { animation: pulse 1.2s var(--ease) infinite; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 2px var(--stock), 0 0 0 5px color-mix(in oklch, var(--ink) 25%, transparent); } }
+
+.action-cell { display: flex; justify-content: end; min-inline-size: 7.5rem; }
+.status { color: var(--ink-2); font-size: var(--step--1); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* no release reachable: no number, no route */
+.parcel[data-state="failed"] .route,
+.parcel[data-state="failed"] .installed,
+.parcel[data-state="failed"] .arrow { display: none; }
+.parcel[data-state="failed"] .latest { color: var(--ink-2); font-family: system-ui, -apple-system, sans-serif; font-size: var(--step-0); font-weight: 400; letter-spacing: 0; }
+
+.problem {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: start;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius);
+  background: var(--express-soft);
+  color: var(--express);
+  font-size: var(--step--1);
+}
+.problem .icon { margin-block-start: 0.15em; }

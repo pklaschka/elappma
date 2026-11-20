@@ -1,0 +1,46 @@
+/* ---- Kraft title bar (macOS draws the traffic lights over its start) --- */
+
+.bar {
+  grid-row: 1;
+  --wails-draggable: drag;
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  min-block-size: 56px;
+  padding: 0.625rem 1rem 0.625rem 5.5rem;
+  background: var(--kraft-fibres), var(--kraft-grain), var(--kraft-mottle), var(--kraft);
+  color: var(--kraft-ink);
+  border-block-end: 2px solid var(--kraft-line);
+}
+
+/* the sender's name, printed wide across the box */
+.bar h1 {
+  margin: 0;
+  font-family: var(--display);
+  font-size: var(--step-2);
+  font-stretch: 125%;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+/* the name and the summary share one printed line */
+.bar-title {
+  display: flex;
+  align-items: baseline;
+  gap: 0.875rem;
+  min-inline-size: 0;
+}
+
+.summary {
+  margin: 0;
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-family: var(--display);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.bar-actions { --wails-draggable: no-drag; display: flex; gap: 0.5rem; margin-inline-start: auto; }

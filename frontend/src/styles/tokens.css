@@ -1,0 +1,57 @@
+/* Lieferling: each app is a shipment. Kraft title bar, white label stock,
+   black ink, versions set like tracking numbers, express red only while an
+   update waits, delivered green once installed. The tracking strip under
+   each number is the one signature move. */
+
+:root {
+  color-scheme: light dark;
+
+  --kraft: light-dark(oklch(76% 0.07 70), oklch(37% 0.05 60));
+  --kraft-ink: light-dark(oklch(21% 0.03 55), oklch(95% 0.015 75));
+  --kraft-line: light-dark(oklch(64% 0.07 65), oklch(46% 0.05 60));
+  --stock: light-dark(oklch(99.2% 0 0), oklch(19% 0.006 60));
+  --well: light-dark(oklch(96.2% 0.002 60), oklch(23.5% 0.006 60));
+  --ink: light-dark(oklch(18% 0.01 60), oklch(95% 0.004 75));
+  --ink-2: light-dark(oklch(43% 0.01 60), oklch(74% 0.008 70));
+  --cut: light-dark(oklch(80% 0.006 60), oklch(36% 0.008 60));
+  --express: light-dark(oklch(53% 0.2 27), oklch(70% 0.17 27));
+  --express-ink: light-dark(oklch(99% 0 0), oklch(17% 0.04 27));
+  --express-soft: light-dark(oklch(95.5% 0.03 27), oklch(29% 0.07 27));
+  --delivered: light-dark(oklch(44% 0.09 152), oklch(76% 0.11 152));
+  --pending: light-dark(oklch(82% 0.004 60), oklch(38% 0.006 60));
+  /* focus is printed in ink, like everything else on the label */
+  --focus: var(--ink);
+  /* the edge of a control: darker than a cut line, so a button or field
+     holds 3:1 against the stock it sits on */
+  --edge: color-mix(in oklch, var(--ink-2) 70%, var(--stock));
+  --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E");
+
+  --radius: 4px;
+  --step--1: 0.75rem;
+  --step-0: 0.875rem;
+  --step-1: 1rem;
+  --step-2: 1.25rem;
+  --step-3: 1.5rem;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  /* the printed voice of the label: Archivo, a grotesque from the age of
+     shipping forms, wide for the sender's name, narrow for field labels */
+  --display: "Archivo Variable", system-ui, -apple-system, sans-serif;
+  /* kraft paper, drawn by the browser from noise: a cloudy tone, fine
+     specks and a few short fibres, tinted for light and dark below */
+  --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.25 0 0 0 0 0.15 0 0 0 0 0.06 0.55 0 0 0 -0.18'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
+  --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter color-interpolation-filters='sRGB' id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.2 0 0 0 0 0.12 0 0 0 0 0.05 1.5 0 0 0 -0.86'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+  --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.07 .45' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.97 0 0 0 0 0.9 0 0 0 0 0.78 3.4 0 0 0 -2.55'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  accent-color: var(--ink);
+  scrollbar-color: var(--edge) transparent;
+}
+
+/* on dark kraft the grain is lighter than the paper, the fibres paler still */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --kraft-mottle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='m' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='3' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.04 0 0 0 0 0.01 0.6 0 0 0 -0.15'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23m)'/%3E%3C/svg%3E");
+    --kraft-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter color-interpolation-filters='sRGB' id='g' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='1' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .7 0 0 0 0 .56 0 0 0 0 .42 1.4 0 0 0 -.68'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23g)'/%3E%3C/svg%3E");
+    --kraft-fibres: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400'%3E%3Cfilter color-interpolation-filters='sRGB' id='f' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.07 .45' numOctaves='2' seed='7' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .62 0 0 0 0 .48 0 0 0 0 .34 1.8 0 0 0 -1.4'/%3E%3C/filter%3E%3Crect width='400' height='400' filter='url(%23f)'/%3E%3C/svg%3E");
+  }
+}

@@ -1,0 +1,39 @@
+/* ---- Catalog dialogs ---------------------------------------------------- */
+
+#import-url { inline-size: min(30rem, calc(100vw - 2rem)); }
+#import-url input { inline-size: 100%; }
+#import-url .field-error { margin-block-start: 0.4rem; min-block-size: 1lh; }
+#import-url .field-error:empty { display: block; }
+
+/* the catalog's contents, set like a packing list: one line per parcel,
+   dashed cut lines between them */
+#import { inline-size: min(32rem, calc(100vw - 2rem)); }
+#import h2 { text-wrap: balance; }
+.import-source { margin-block: -0.25rem 0.75rem; font-size: var(--step--1); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.manifest {
+  margin: 0;
+  padding: 0 0.75rem;
+  max-block-size: min(16rem, 45vh);
+  overflow-y: auto;
+  list-style: none;
+  border: 1px solid var(--cut);
+  border-radius: var(--radius);
+  background: var(--well);
+}
+.manifest li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.5rem;
+  padding-block: 0.5rem;
+  border-block-end: 1px dashed var(--cut);
+}
+.manifest li:last-child { border-block-end: 0; }
+.manifest .check { color: var(--ink); min-inline-size: 0; }
+.manifest-repo { overflow: hidden; text-overflow: ellipsis; }
+.manifest-note { margin-inline-start: auto; color: var(--ink-2); font-size: var(--step--1); }
+.manifest [data-state="known"] .check { color: var(--ink-2); }
+.manifest [data-state="invalid"] .check { color: var(--ink-2); }
+.manifest [data-state="invalid"] .manifest-note { flex-basis: 100%; margin-inline-start: calc(1rem + 0.375rem); color: var(--express); }
+#import-note { margin: 0.75rem 0 0; font-size: var(--step--1); }
+#import-note:empty { display: none; }

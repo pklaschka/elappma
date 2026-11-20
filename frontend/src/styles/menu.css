@@ -1,0 +1,47 @@
+/* ---- Row menu ----------------------------------------------------------- */
+
+.menu {
+  /* WebKit's popover sheet stretches the box (inset: 0); pin every edge and
+     the height ourselves, the script sets top or bottom and right. */
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  block-size: fit-content;
+  max-block-size: calc(100vh - 1rem);
+  overflow-y: auto;
+  align-content: start;
+  min-inline-size: 14rem;
+  padding: 0.3rem;
+  border: 1px solid var(--cut);
+  border-radius: var(--radius);
+  /* in the dark the sheet lifts off the page by a step of grey */
+  background: light-dark(var(--stock), var(--well));
+  color: var(--ink);
+  transition: opacity 120ms var(--ease), translate 120ms var(--ease);
+  box-shadow: 0 10px 28px -10px oklch(0% 0 0 / 0.35), 0 2px 6px -2px oklch(0% 0 0 / 0.2);
+}
+.menu:popover-open { display: grid; }
+@starting-style { .menu:popover-open { opacity: 0; translate: 0 -3px; } }
+.menu button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.6rem 0.35rem 0.4rem;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+}
+.menu:has(.tick) button:not(:has(.tick)) { padding-inline-start: calc(0.4rem + 1em + 0.5rem); }
+.menu:not(:has(.tick)) button { padding-inline-start: 0.6rem; }
+.menu .tick { visibility: hidden; }
+.menu [aria-checked="true"] .tick { visibility: visible; }
+.menu button:hover:not(:disabled) { background: var(--well); }
+/* the keyboard's place is printed solid, the pointer's only shaded */
+.menu button:focus-visible { background: var(--ink); color: var(--stock); outline: none; }
+.menu .danger:focus-visible { background: var(--express); color: var(--express-ink); }
+.menu button:disabled { color: color-mix(in oklch, var(--ink-2) 55%, var(--stock)); }
+.menu .danger { color: var(--express); }
+.menu hr { margin: 0.25rem 0.4rem; border: 0; border-block-start: 1px solid var(--cut); }

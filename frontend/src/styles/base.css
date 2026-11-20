@@ -1,0 +1,53 @@
+/* ---- Base --------------------------------------------------------------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+.sprite { position: absolute; inline-size: 0; block-size: 0; overflow: hidden; }
+
+html { block-size: 100%; }
+
+body {
+  margin: 0;
+  block-size: 100vh;
+  display: grid;
+  grid-template-rows: auto auto 1fr auto;
+  background: var(--stock);
+  color: var(--ink);
+  font: var(--step-0) / 1.45 system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  cursor: default;
+  /* a desktop app: labels, names and versions are not text to select.
+     Only what someone types or copies stays selectable (see .selectable). */
+  -webkit-user-select: none;
+  user-select: none;
+}
+img, a { -webkit-user-drag: none; }
+
+::selection { background: var(--kraft); color: var(--kraft-ink); }
+::placeholder { color: var(--ink-2); }
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+.visually-hidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.icon {
+  inline-size: 1em;
+  block-size: 1em;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+code, .path { font-family: var(--mono); font-size: 0.9em; }
+input, textarea, .selectable, .field-error, .problem span { -webkit-user-select: text; user-select: text; }
