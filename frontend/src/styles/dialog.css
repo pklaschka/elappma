@@ -1,0 +1,18 @@
+/* ---- Dialog ------------------------------------------------------------- */
+
+dialog {
+  inline-size: min(26rem, calc(100vw - 2rem));
+  padding: 1.25rem;
+  border: 1px solid var(--cut);
+  border-radius: calc(var(--radius) + 4px);
+  background: var(--stock);
+  color: var(--ink);
+  box-shadow: 0 24px 48px -16px oklch(0% 0 0 / 0.4);
+}
+dialog:modal { overscroll-behavior: contain; }
+dialog::backdrop { overflow: hidden; overscroll-behavior: contain; background: oklch(15% 0.01 60 / 0.35); }
+dialog h2 { margin: 0 0 0.5rem; font-family: var(--display); font-size: var(--step-1); font-weight: 700; }
+dialog p { margin: 0 0 1rem; color: var(--ink-2); }
+dialog .check { display: flex; }
+dialog .check + .check { margin-block-start: 0.5rem; }
+.dialog-actions { display: flex; justify-content: end; gap: 0.5rem; margin-block-start: 1.25rem; }

@@ -1,0 +1,20 @@
+/* ---- Narrow windows ----------------------------------------------------- */
+
+@media (width < 640px) {
+  .bar { padding-inline-start: 5rem; }
+  .summary:not([data-note]) { display: none; }
+  .add input[type="text"] { flex-basis: 100%; }
+  .add .button { margin-inline-start: auto; }
+  .parcels { grid-template-columns: minmax(0, 1fr) auto auto; }
+  .who { grid-column: 1; grid-row: 1; }
+  .action-cell { grid-column: 2; grid-row: 1; min-inline-size: 0; }
+  .more, .more-slip { grid-column: 3; grid-row: 1; }
+  .shipment { grid-column: 1 / -1; grid-row: 2; padding-inline-start: calc(var(--stamp) + 0.75rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0.01ms !important; }
+  .button[aria-busy="true"] .icon { animation-duration: 3s; }
+  .parcel[data-busy] .route [data-stop="loaded"]::before { animation: none; }
+  .transit::after { animation: none; opacity: 1; translate: calc(5.25rem - 0.75rem); }
+}

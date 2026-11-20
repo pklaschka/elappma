@@ -7,7 +7,6 @@ package forge
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -39,14 +38,6 @@ type Asset struct {
 	Size int64  `json:"size"`
 }
 
-// ErrNotFound is returned when a repository has no releases or cannot be seen
-// (GitHub, Forgejo and Gitea answer 404 for private repositories without
-// access, too).
-var ErrNotFound = errors.New("repository or release not found (private repositories need a token)")
-
-// ErrNoForge is returned for a host that does not serve the Forgejo/Gitea API.
-var ErrNoForge = errors.New("does not answer like a Forgejo or Gitea server")
-
 // Repo names a repository: Host is "" for GitHub, else the Forgejo or Gitea
 // server ("codeberg.org", "git.example.com:3000").
 type Repo struct {
@@ -57,9 +48,6 @@ var (
 	namePattern = regexp.MustCompile(`^[A-Za-z0-9_.-]+$`)
 	hostPattern = regexp.MustCompile(`^[a-z0-9]([a-z0-9.-]*[a-z0-9])?(:[0-9]{1,5})?$`)
 )
-
-// ErrBadRepo is returned by ParseRepo for anything it cannot read.
-var ErrBadRepo = errors.New("is not a repository (owner/name, host/owner/name or its URL)")
 
 // ParseRepo accepts owner/name for GitHub, host/owner/name for a Forgejo or
 // Gitea server, and the web, clone and SSH URLs of either (with or without

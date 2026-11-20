@@ -1,0 +1,15 @@
+/* The stylesheet in cascade order: tokens.css holds the colours and
+   measures, the rest follows the window from top to bottom. */
+@import "./tokens.css";
+@import "./base.css";
+@import "./bar.css";
+@import "./controls.css";
+@import "./add.css";
+@import "./parcel.css";
+@import "./menu.css";
+@import "./loading.css";
+@import "./dialog.css";
+@import "./catalog.css";
+@import "./commandline.css";
+@import "./foot.css";
+@import "./responsive.css";

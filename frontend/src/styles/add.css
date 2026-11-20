@@ -1,0 +1,14 @@
+/* ---- Add strip ---------------------------------------------------------- */
+
+.add {
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--well);
+  border-block-end: 1px solid var(--cut);
+}
+.field-error:empty { display: none; }
+.field-error { flex-basis: 100%; margin: 0; color: var(--express); font-size: var(--step--1); overflow-wrap: break-word; }

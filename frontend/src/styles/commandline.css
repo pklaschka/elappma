@@ -1,0 +1,40 @@
+/* ---- Command line dialog ------------------------------------------------ */
+
+/* the command line: which link goes where */
+.command-link {
+  display: grid;
+  grid-template-columns: 1em minmax(0, 1fr);
+  align-items: center;
+  gap: 0.2rem 0.45rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px dashed var(--cut);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+}
+dialog p.command-link { color: var(--ink); }
+.command-link code { font-size: 1em; }
+.command-link .to { color: var(--ink-2); }
+.command-link .arrow { color: var(--ink-2); }
+.command-link .tick { visibility: hidden; color: var(--delivered); stroke-width: 2.2; }
+#command[data-state="linked"] .command-link .tick { visibility: visible; }
+#command[data-state="unavailable"] .command-link { display: none; }
+/* the command and the folder in the note stay on one line; the paths in
+   the link box break after a slash instead (see showCommand) */
+#command-note code { white-space: nowrap; }
+.command-link code { overflow-wrap: break-word; }
+#command .dialog-actions [value="remove"] { margin-inline-end: auto; }
+#command .field-error { margin-block-start: 0.75rem; }
+#command p.command-wait { margin: 0.75rem 0 0; font-size: var(--step--1); }
+.command-manual { margin-block-start: 0.75rem; }
+#command .command-manual p { margin: 0 0 0.35rem; font-size: var(--step--1); }
+.manual-line { display: flex; align-items: start; gap: 0.5rem; }
+.manual-line code {
+  flex: 1;
+  min-inline-size: 0;
+  padding: 0.4rem 0.55rem;
+  border-radius: var(--radius);
+  background: var(--well);
+  font-size: var(--step--1);
+  overflow-wrap: anywhere;
+}
+.manual-line .button { flex: none; }

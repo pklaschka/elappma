@@ -4,16 +4,11 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
-	"net/url"
-	"strings"
 	"sync"
-	"time"
 
 	"github.com/wailsapp/wails/v3/pkg/application"
 
 	"github.com/pklaschka/lieferling/internal/deeplink"
-	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/icon"
 	"github.com/pklaschka/lieferling/internal/install"
 	"github.com/pklaschka/lieferling/internal/pick"
@@ -60,15 +55,6 @@ func (s *AppService) Apps(ctx context.Context) ([]store.Status, error) {
 	return list, nil
 }
 
-func translateAll(list []store.Status) []store.Status {
-	for i := range list {
-		if list[i].Error != "" {
-			list[i].Error = translate(fmt.Errorf("%s", list[i].Error)).Error()
-		}
-	}
-	return list
-}
-
 // Add puts a repository on the list.
 func (s *AppService) Add(ctx context.Context, repo string, prerelease bool) (store.Status, error) {
 	ch := pick.Stable
@@ -98,36 +84,6 @@ func (s *AppService) Install(ctx context.Context, repo string) (store.Status, er
 	}
 	s.changed(ctx)
 	return st, nil
-}
-
-// TakeLink returns the deep link that opened Lieferling, once, or nil.
-func (s *AppService) TakeLink() *deeplink.Link {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	l := s.link
-	s.link = nil
-	return l
-}
-
-// LinkFor returns the deep link that adds repo, for a README.
-func (s *AppService) LinkFor(repo string, install bool) (string, error) {
-	repo, err := store.NormalizeRepo(repo)
-	if err != nil {
-		return "", translate(err)
-	}
-	return deeplink.Link{Repo: repo, Install: install}.PageURL(), nil
-}
-
-// openLink keeps a deep link for the window and tells it.
-func (s *AppService) openLink(raw string) {
-	l, err := deeplink.Parse(raw)
-	if err != nil {
-		return
-	}
-	s.mu.Lock()
-	s.link = &l
-	s.mu.Unlock()
-	s.app.Event.Emit("link:opened")
 }
 
 // SetChannel switches between stable releases and release candidates.
@@ -172,72 +128,6 @@ func (s *AppService) Icon(ctx context.Context, repo string) (string, error) {
 	return "data:" + ic.MIME + ";base64," + base64.StdEncoding.EncodeToString(ic.Data), nil
 }
 
-// OpenURL opens a release page in the browser: only https links to GitHub
-// or to the server of an app on the list.
-func (s *AppService) OpenURL(raw string) error {
-	if !s.knownHost(raw) {
-		return fmt.Errorf("Nur Links zu GitHub und zu den Servern der Apps auf der Liste werden geöffnet.")
-	}
-	return s.app.Browser.OpenURL(raw)
-}
-
-func (s *AppService) knownHost(raw string) bool {
-	u, err := url.Parse(raw)
-	if err != nil || u.Scheme != "https" || u.User != nil {
-		return false
-	}
-	if strings.EqualFold(u.Host, "github.com") {
-		return true
-	}
-	cfg, err := s.store.Config()
-	if err != nil {
-		return false
-	}
-	for _, a := range cfg.Apps {
-		if r, err := forge.ParseRepo(a.Repo); err == nil && strings.EqualFold(r.WebHost(), u.Host) {
-			return true
-		}
-	}
-	return false
-}
-
-// CommandLine says whether the lieferling command is set up in the terminal.
-func (s *AppService) CommandLine() install.Command {
-	return install.CommandStatus(install.BundledCommand(s.self), install.CommandPath)
-}
-
-// commandTimeout bounds the wait for the password dialog, so the window
-// never waits for one that macOS did not show.
-const commandTimeout = 2 * time.Minute
-
-// InstallCommandLine links the command line in this app into the PATH,
-// replacing an older copy there. macOS asks for an administrator password;
-// closing that dialog changes nothing and is no error.
-func (s *AppService) InstallCommandLine(ctx context.Context) (install.Command, error) {
-	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
-	defer cancel()
-	bundled := install.BundledCommand(s.self)
-	return s.commandDone(ctx, install.LinkCommand(ctx, bundled, install.CommandPath, false))
-}
-
-// RemoveCommandLine takes the link out of the PATH again.
-func (s *AppService) RemoveCommandLine(ctx context.Context) (install.Command, error) {
-	ctx, cancel := context.WithTimeout(ctx, commandTimeout)
-	defer cancel()
-	return s.commandDone(ctx, install.UnlinkCommand(ctx, install.CommandPath, false))
-}
-
-func (s *AppService) commandDone(ctx context.Context, err error) (install.Command, error) {
-	switch {
-	case err == nil, errors.Is(err, install.ErrCanceled), errors.Is(ctx.Err(), context.Canceled):
-		return s.CommandLine(), nil
-	case errors.Is(ctx.Err(), context.DeadlineExceeded):
-		return s.CommandLine(), errors.New("macOS hat nicht rechtzeitig nach dem Passwort gefragt. Richte den Befehl stattdessen im Terminal ein.")
-	default:
-		return s.CommandLine(), translate(err)
-	}
-}
-
 // ConfigPath says where the shared list lives.
 func (s *AppService) ConfigPath() string { return s.store.ConfigPath }
 
@@ -260,40 +150,4 @@ func (s *AppService) remember(list []store.Status) {
 	s.mu.Lock()
 	s.last = list
 	s.mu.Unlock()
-}
-
-// translate gives the store's English errors a German wording where the
-// window shows them; anything unknown passes through.
-func translate(err error) error {
-	msg := err.Error()
-	for en, de := range map[string]string{
-		"repository or release not found (private repositories need a token)":           "Repository oder Release nicht gefunden. Private Repositories brauchen einen Token.",
-		"does not answer like a Forgejo or Gitea server":                                "antwortet nicht wie ein Forgejo- oder Gitea-Server.",
-		"is not a repository (owner/name, host/owner/name or its URL)":                  "ist kein Repository. Erwartet wird owner/name für GitHub, host/owner/name für Forgejo und Gitea oder die URL.",
-		"installing is not supported on this system yet":                                "Installieren geht auf diesem System noch nicht, bisher nur unter macOS.",
-		"has nothing to install on":                                                     "hat keine passende Datei für",
-		"no release in the stable channel":                                              "hat noch kein stabiles Release",
-		"no release in the prerelease channel":                                          "hat noch kein Release",
-		"the app is not installed on this computer":                                     "Die App ist auf diesem Mac nicht installiert.",
-		"Lieferling cannot remove itself while it runs: quit it and move it to the Bin": "Lieferling kann sich nicht selbst löschen, solange es läuft. Beende es und zieh es in den Papierkorb.",
-		// catalogs
-		"the catalog lists no repositories":                                          "Im Katalog steht kein Repository.",
-		`not a catalog: there is no "apps" list`:                                     "Das ist kein Katalog: Die Liste „apps“ fehlt.",
-		"this is a web page, not a catalog (for a file on GitHub, use its Raw link)": "Das ist eine Webseite, kein Katalog. Bei einer Datei auf GitHub hilft ihr Raw-Link.",
-		"catalogs are only loaded over https":                                        "Kataloge werden nur über https geladen.",
-		"is not a web address":                                                       "ist keine Webadresse",
-		"the server answered":                                                        "Der Server antwortete mit",
-		"the catalog is larger than 1 MB":                                            "Der Katalog ist größer als 1 MB.",
-		"not valid JSON":                                                             "kein gültiges JSON",
-		"unknown channel":                                                            "Unbekannter Kanal",
-		"use stable or prerelease":                                                   "erlaubt sind stable und prerelease",
-		"this copy of Lieferling carries no command line":                            "Diese Ausgabe von Lieferling bringt keine Kommandozeile mit.",
-		"is not a link Lieferling made: remove it yourself":                          "ist kein Verweis von Lieferling. Entferne die Datei selbst, wenn du sie nicht mehr brauchst.",
-		"is a folder":                                                                "ist ein Ordner, kein Befehl. Lieferling lässt ihn unangetastet.",
-	} {
-		if strings.Contains(msg, en) {
-			msg = strings.Replace(msg, en, de, 1)
-		}
-	}
-	return fmt.Errorf("%s", msg)
 }
