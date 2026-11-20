@@ -3,6 +3,7 @@ package forge
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,8 +82,8 @@ func (c *Gitea) Releases(ctx context.Context, r Repo) ([]Release, error) {
 		}
 		return nil, fmt.Errorf("%s: %w", r, ErrNotFound)
 	}
-	if resp.StatusCode >= 300 {
-		return nil, answered(r.Host, resp)
+	if err := statusError(r.Host, resp); err != nil {
+		return nil, err
 	}
 	var raw []giteaRelease
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
@@ -91,15 +92,21 @@ func (c *Gitea) Releases(ctx context.Context, r Repo) ([]Release, error) {
 	}
 	out := make([]Release, len(raw))
 	for i, g := range raw {
-		out[i] = Release{
-			TagName: g.TagName, Name: g.Name, Draft: g.Draft, Prerelease: g.Prerelease,
-			PublishedAt: g.PublishedAt, HTMLURL: g.HTMLURL,
-		}
-		for _, a := range g.Assets {
-			out[i].Assets = append(out[i].Assets, Asset{Name: a.Name, URL: a.DownloadURL, Size: a.Size})
-		}
+		out[i] = g.release()
 	}
 	return out, nil
+}
+
+// release is the release in the shape GitHub sends it.
+func (g giteaRelease) release() Release {
+	rel := Release{
+		TagName: g.TagName, Name: g.Name, Draft: g.Draft, Prerelease: g.Prerelease,
+		PublishedAt: g.PublishedAt, HTMLURL: g.HTMLURL,
+	}
+	for _, a := range g.Assets {
+		rel.Assets = append(rel.Assets, Asset{Name: a.Name, URL: a.DownloadURL, Size: a.Size})
+	}
+	return rel
 }
 
 func (c *Gitea) repoAPI(r Repo) string {
@@ -112,13 +119,12 @@ func (c *Gitea) getOK(ctx context.Context, r Repo, rawURL string) (*http.Respons
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", r, err)
 	}
-	if resp.StatusCode == http.StatusNotFound {
+	if err := statusError(r.Host, resp); err != nil {
 		resp.Body.Close()
-		return nil, fmt.Errorf("%s: %w", r, ErrNotFound)
-	}
-	if resp.StatusCode >= 300 {
-		defer resp.Body.Close()
-		return nil, answered(r.Host, resp)
+		if errors.Is(err, ErrNotFound) {
+			return nil, fmt.Errorf("%s: %w", r, err)
+		}
+		return nil, err
 	}
 	return resp, nil
 }
@@ -185,16 +191,8 @@ func (c *Gitea) Download(ctx context.Context, r Repo, a Asset, w io.Writer, prog
 		return fmt.Errorf("downloading %s: %w", a.Name, err)
 	}
 	defer resp.Body.Close()
-	if resp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("downloading %s: %w", a.Name, ErrNotFound)
-	}
-	if resp.StatusCode >= 300 {
-		return fmt.Errorf("downloading %s: %w", a.Name, answered(r.Host, resp))
+	if err := statusError(r.Host, resp); err != nil {
+		return fmt.Errorf("downloading %s: %w", a.Name, err)
 	}
 	return copyBody(resp, a, w, progress)
-}
-
-func answered(host string, resp *http.Response) error {
-	body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-	return fmt.Errorf("%s answered %s: %s", host, resp.Status, strings.TrimSpace(string(body)))
 }

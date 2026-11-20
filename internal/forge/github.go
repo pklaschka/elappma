@@ -44,14 +44,9 @@ func (c *GitHub) request(ctx context.Context, url, accept string) (*http.Respons
 	if err != nil {
 		return nil, err
 	}
-	if resp.StatusCode == http.StatusNotFound {
+	if err := statusError("GitHub", resp); err != nil {
 		resp.Body.Close()
-		return nil, ErrNotFound
-	}
-	if resp.StatusCode >= 300 {
-		body, _ := io.ReadAll(io.LimitReader(resp.Body, 512))
-		resp.Body.Close()
-		return nil, fmt.Errorf("GitHub answered %s: %s", resp.Status, strings.TrimSpace(string(body)))
+		return nil, err
 	}
 	return resp, nil
 }
