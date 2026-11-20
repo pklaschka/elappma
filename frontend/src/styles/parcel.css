@@ -206,8 +206,10 @@ a.repo[href]:hover { text-decoration: underline; text-underline-offset: 0.15em; 
 .parcel[data-state="failed"] .arrow { display: none; }
 .parcel[data-state="failed"] .latest { color: var(--ink-2); font-family: system-ui, -apple-system, sans-serif; font-size: var(--step-0); font-weight: 400; letter-spacing: 0; }
 
+/* lines under the parcel (rowSection in features/row.ts) span the whole row */
+.parcel > [data-section] { grid-column: 1 / -1; }
+
 .problem {
-  grid-column: 1 / -1;
   display: flex;
   align-items: start;
   gap: 0.4rem;
