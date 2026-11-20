@@ -25,45 +25,77 @@ type mac struct{ o Options }
 // DMG or ZIP, quit the running copy, replace the old one and clear the
 // quarantine flag so macOS opens the unsigned app.
 func (m *mac) Install(ctx context.Context, file, assetName string) (Result, error) {
-	work, err := os.MkdirTemp("", "lieferling-")
+	u, err := unpack(ctx, file, assetName)
 	if err != nil {
 		return Result{}, err
 	}
-	defer os.RemoveAll(work)
+	defer u.close()
+	return m.place(ctx, u)
+}
 
-	var source string
+// unpacked is an app taken out of its download, not yet in place.
+type unpacked struct {
+	source string // the .app inside the mounted DMG or the unzipped folder
+	name   string // bundle name without .app
+	close  func() // detaches the DMG, then removes the work folder
+}
+
+// unpack takes the .app out of a DMG or ZIP into a work folder.
+func unpack(ctx context.Context, file, assetName string) (u unpacked, err error) {
+	work, err := os.MkdirTemp("", "lieferling-")
+	if err != nil {
+		return unpacked{}, err
+	}
+	cleanup := []func(){func() { os.RemoveAll(work) }}
+	u.close = func() {
+		for i := len(cleanup) - 1; i >= 0; i-- {
+			cleanup[i]()
+		}
+	}
+	defer func() {
+		if err != nil {
+			u.close()
+		}
+	}()
+
 	switch strings.ToLower(filepath.Ext(assetName)) {
 	case ".dmg":
 		mount := filepath.Join(work, "mount")
 		if err := os.Mkdir(mount, 0o755); err != nil {
-			return Result{}, err
+			return u, err
 		}
 		if err := run(ctx, "hdiutil", "attach", file, "-nobrowse", "-readonly", "-quiet", "-mountpoint", mount); err != nil {
-			return Result{}, fmt.Errorf("opening the DMG: %w", err)
+			return u, fmt.Errorf("opening the DMG: %w", err)
 		}
-		defer exec.Command("hdiutil", "detach", mount, "-quiet", "-force").Run()
-		source, err = findApp(mount)
+		cleanup = append(cleanup, func() { exec.Command("hdiutil", "detach", mount, "-quiet", "-force").Run() })
+		u.source, err = findApp(mount)
 	case ".zip":
 		out := filepath.Join(work, "unzipped")
 		if err := run(ctx, "ditto", "-x", "-k", file, out); err != nil {
-			return Result{}, fmt.Errorf("unpacking the ZIP: %w", err)
+			return u, fmt.Errorf("unpacking the ZIP: %w", err)
 		}
-		source, err = findApp(out)
+		u.source, err = findApp(out)
 	default:
-		return Result{}, fmt.Errorf("cannot install %s: only .dmg and .zip are supported on macOS", assetName)
+		return u, fmt.Errorf("cannot install %s: only .dmg and .zip are supported on macOS", assetName)
 	}
 	if err != nil {
-		return Result{}, err
+		return u, err
 	}
+	u.name = strings.TrimSuffix(filepath.Base(u.source), ".app")
+	return u, nil
+}
 
-	name := strings.TrimSuffix(filepath.Base(source), ".app")
-	target := filepath.Join(m.o.Dir, name+".app")
+// place puts an unpacked app into the applications folder: it quits the
+// running copy, replaces the old one, clears the quarantine flag and opens
+// the app again if it was running.
+func (m *mac) place(ctx context.Context, u unpacked) (Result, error) {
+	target := filepath.Join(m.o.Dir, u.name+".app")
 	self := SamePath(target, m.o.Self)
 	// An app that was running is opened again afterwards, like an updater
 	// would. Lieferling replacing itself stays open; its caller restarts it.
 	reopen := false
-	if !self && running(name) {
-		if err := quit(ctx, name); err != nil {
+	if !self && running(u.name) {
+		if err := quit(ctx, u.name); err != nil {
 			return Result{}, err
 		}
 		reopen = true
@@ -71,14 +103,14 @@ func (m *mac) Install(ctx context.Context, file, assetName string) (Result, erro
 	// copy next to the old one first, so a failed copy leaves it in place
 	next := target + ".lieferling-new"
 	script := fmt.Sprintf("rm -rf %[1]s && ditto %[2]s %[1]s && xattr -cr %[1]s && rm -rf %[3]s && mv %[1]s %[3]s",
-		shellQuote(next), shellQuote(source), shellQuote(target))
+		shellQuote(next), shellQuote(u.source), shellQuote(target))
 	if err := m.shell(ctx, script, !writable(m.o.Dir) || (exists(target) && !writable(target))); err != nil {
 		return Result{}, fmt.Errorf("installing into %s: %w", m.o.Dir, err)
 	}
 	if reopen {
 		_ = exec.Command("open", target).Run()
 	}
-	return Result{Path: target, AppName: name, Self: self}, nil
+	return Result{Path: target, AppName: u.name, Self: self}, nil
 }
 
 func (m *mac) Uninstall(ctx context.Context, path string) error {
