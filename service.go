@@ -13,6 +13,7 @@ import (
 	"github.com/pklaschka/lieferling/internal/install"
 	"github.com/pklaschka/lieferling/internal/pick"
 	"github.com/pklaschka/lieferling/internal/store"
+	"github.com/pklaschka/lieferling/internal/verify"
 )
 
 // Progress is sent to the window while a download runs.
@@ -39,6 +40,7 @@ type AppService struct {
 
 	self     string // this app's bundle, for updating itself
 	relaunch func() // quits and opens the new copy
+	notify   func(title, body string)
 
 	mu   sync.Mutex
 	last []store.Status // newest list, for the tray and notifications
@@ -69,13 +71,37 @@ func (s *AppService) Add(ctx context.Context, repo string, prerelease bool) (sto
 	return st, nil
 }
 
-// Install installs or updates one app.
+// Install installs or updates one app. A package held at customs is not an
+// error here: the returned status carries the note in Customs.
 func (s *AppService) Install(ctx context.Context, repo string) (store.Status, error) {
-	st, err := s.store.Install(ctx, repo, func(repo string, done, total int64) {
-		s.app.Event.Emit("install:progress", Progress{Repo: repo, Done: done, Total: total})
-	})
-	if err != nil {
+	st, err := s.store.Install(ctx, repo, s.progress)
+	return s.installed(ctx, st, err)
+}
+
+// AcceptSender installs the package whose changed sender the user just
+// confirmed.
+func (s *AppService) AcceptSender(ctx context.Context, repo string) (store.Status, error) {
+	st, err := s.store.AcceptSender(ctx, repo, s.progress)
+	return s.installed(ctx, st, err)
+}
+
+func (s *AppService) progress(repo string, done, total int64) {
+	s.app.Event.Emit("install:progress", Progress{Repo: repo, Done: done, Total: total})
+}
+
+// installed ends Install and AcceptSender.
+func (s *AppService) installed(ctx context.Context, st store.Status, err error) (store.Status, error) {
+	held := errors.Is(err, verify.ErrHeld) || errors.Is(err, verify.ErrAsk)
+	if err != nil && !held {
 		return st, translate(err)
+	}
+	s.present(&st)
+	if held {
+		if st.Self && s.notify != nil && st.Customs != nil {
+			s.notify("Lieferling-Update angehalten", st.Customs.Summary)
+		}
+		s.changed(ctx)
+		return st, nil
 	}
 	if install.SamePath(st.Path, s.self) && s.relaunch != nil {
 		// Lieferling just replaced itself: start the new copy
@@ -142,10 +168,17 @@ func (s *AppService) changed(ctx context.Context) {
 	}()
 }
 
+// present prepares a status for the window: it marks the running copy of
+// Lieferling and writes the customs note in German.
+func (s *AppService) present(st *store.Status) {
+	st.Self = s.self != "" && install.SamePath(st.Path, s.self)
+	verify.Localize(st.Customs, verify.German)
+}
+
 func (s *AppService) remember(list []store.Status) {
 	translateAll(list)
 	for i := range list {
-		list[i].Self = s.self != "" && install.SamePath(list[i].Path, s.self)
+		s.present(&list[i])
 	}
 	s.mu.Lock()
 	s.last = list

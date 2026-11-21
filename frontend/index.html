@@ -120,6 +120,29 @@
         <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
         <span></span>
       </p>
+      <details class="customs" data-section="customs" hidden>
+        <summary>
+          <span class="customs-label">Zoll</span>
+          <span class="customs-summary"></span>
+          <span class="customs-tag"></span>
+          <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+        </summary>
+        <div class="customs-box">
+          <ul class="customs-lines"></ul>
+          <p class="customs-foot" hidden>
+            <span class="customs-hint"></span>
+            <button type="button" class="text-button" data-customs="accept">Trotzdem installieren …</button>
+          </p>
+        </div>
+      </details>
+    </li>
+  </template>
+
+  <template id="customs-line">
+    <li>
+      <svg class="icon" aria-hidden="true"><use/></svg>
+      <span class="customs-name"><span class="visually-hidden"></span></span>
+      <span class="customs-detail"></span>
     </li>
   </template>
 
@@ -147,6 +170,23 @@
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Behalten</button>
         <button value="remove" class="button danger">Entfernen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-sender" aria-labelledby="sender-title" aria-describedby="sender-note">
+    <form method="dialog">
+      <h2 id="sender-title"></h2>
+      <dl class="sender-compare">
+        <dt>Bisher</dt>
+        <dd data-sender="before"><code class="bundle"></code> <span class="team"></span></dd>
+        <dt>Jetzt</dt>
+        <dd data-sender="after"><code class="bundle"></code> <span class="team"></span></dd>
+      </dl>
+      <p id="sender-note">Das passiert, wenn die App neu signiert oder umbenannt wurde, oder wenn jemand anderes das Paket gebaut hat. Lieferling kann das nicht unterscheiden.</p>
+      <div class="dialog-actions">
+        <button value="cancel" class="button" autofocus>Nicht installieren</button>
+        <button value="accept" class="button danger">Annehmen und installieren</button>
       </div>
     </form>
   </dialog>

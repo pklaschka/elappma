@@ -48,3 +48,74 @@ func TestLoadMissing(t *testing.T) {
 		t.Fatalf("got %+v, %v", cfg, err)
 	}
 }
+
+func writeConflict(t *testing.T, dir, data string) {
+	t.Helper()
+	if err := os.WriteFile(filepath.Join(dir, "config 2.json"), []byte(data), 0o644); err != nil {
+		t.Fatal(err)
+	}
+}
+
+const (
+	digA = "sha256:aaaa"
+	digB = "sha256:bbbb"
+)
+
+func TestMergeDigests(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	if err := Update(path, func(c *Config) error {
+		c.Apps = []App{{Repo: "a/one", Digests: map[string]string{"1.0/a.dmg": digA, "0.9/a.dmg": digA}}}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeConflict(t, dir, `{"version":1,"apps":[{"repo":"a/one","digests":{"1.0/a.dmg":"`+digB+`","0.9/a.dmg":"`+digA+`","1.1/a.dmg":"`+digB+`"}}]}`)
+	if err := Update(path, func(*Config) error { return nil }); err != nil {
+		t.Fatal(err)
+	}
+	cfg, _ := Load(path)
+	d := cfg.Find("a/one").Digests
+	if d["1.0/a.dmg"] != digA+" "+digB || d["0.9/a.dmg"] != digA || d["1.1/a.dmg"] != digB {
+		t.Errorf("digests = %v", d)
+	}
+	if _, err := os.Stat(filepath.Join(dir, "config 2.json")); !os.IsNotExist(err) {
+		t.Error("conflict copy still there")
+	}
+}
+
+func TestMergeSender(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	if err := Update(path, func(c *Config) error {
+		c.Apps = []App{{Repo: "a/one"}, {Repo: "b/two", BundleID: "b.two", TeamID: "TEAMAAAAAA"}}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeConflict(t, dir, `{"version":1,"apps":[{"repo":"a/one","bundleId":"a.one","teamId":"TEAMBBBBBB"},{"repo":"b/two","bundleId":"b.other"}]}`)
+	cfg, _ := Load(path)
+	if a := cfg.Find("a/one"); a.BundleID != "a.one" || a.TeamID != "TEAMBBBBBB" {
+		t.Errorf("empty pair not taken: %+v", a)
+	}
+	if b := cfg.Find("b/two"); b.BundleID != "b.two" || b.TeamID != "TEAMAAAAAA" {
+		t.Errorf("main pair not kept: %+v", b)
+	}
+}
+
+func TestMergePolicy(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "config.json")
+	if err := Update(path, func(c *Config) error {
+		c.Verify = "standard"
+		c.Apps = []App{{Repo: "a/one", Verify: "off"}}
+		return nil
+	}); err != nil {
+		t.Fatal(err)
+	}
+	writeConflict(t, dir, `{"version":1,"verify":"strict","apps":[{"repo":"a/one","verify":"standard"}]}`)
+	cfg, _ := Load(path)
+	if cfg.Verify != "strict" || cfg.Find("a/one").Verify != "standard" {
+		t.Errorf("policy = %q, app %q", cfg.Verify, cfg.Find("a/one").Verify)
+	}
+}

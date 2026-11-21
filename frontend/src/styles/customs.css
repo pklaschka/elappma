@@ -1,0 +1,139 @@
+/* the customs note under a parcel (features/customs.ts), drawn like the
+   delivery note: a printed line »ZOLL«, the verdict and a tag, unfolding
+   to a box with one line per check. Red only where something stopped the
+   package; a tag in delivered green when every line matched. */
+.customs summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem 0.75rem;
+  inline-size: fit-content;
+  max-inline-size: 100%;
+  min-block-size: 1.5rem;
+  list-style: none;
+  color: var(--ink-2);
+}
+.customs summary::-webkit-details-marker { display: none; }
+.customs summary:where(:not([aria-disabled="true"])) { cursor: pointer; }
+.customs summary:where(:not([aria-disabled="true"])):hover .customs-summary { color: var(--ink); }
+
+/* the field-label voice, set in ink like LIEFERSCHEIN */
+.customs-label {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+/* the tag: a stamped box like »Vorab« */
+.customs-tag {
+  padding: 0 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.customs-tag[data-tone="done"] { color: var(--delivered); }
+.customs-tag[data-tone="part"] { color: var(--ink-2); }
+.customs-tag[data-tone="stop"] { color: var(--express); }
+
+/* the chevron after the tag points up while open */
+.customs .chevron { color: var(--ink-2); }
+.customs[open] .chevron { rotate: 180deg; }
+.customs summary[aria-disabled="true"] .chevron { display: none; }
+@media (prefers-reduced-motion: no-preference) {
+  .customs .chevron { transition: rotate 0.2s var(--ease); }
+}
+
+.customs-box {
+  margin-block-start: 0.6rem;
+  padding: 0 1rem;
+  border: 1px solid var(--cut);
+  border-radius: var(--radius);
+  background: var(--well);
+}
+.customs-lines { margin: 0; padding: 0; list-style: none; }
+.customs-lines li {
+  display: grid;
+  grid-template-columns: 1rem minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding-block: 0.7rem;
+}
+.customs-lines li + li,
+.customs-foot { border-block-start: 1px dashed var(--cut); }
+.customs-lines .icon { align-self: start; margin-block-start: 0.2em; }
+.customs-lines li[data-result="pass"] .icon { color: var(--delivered); }
+.customs-lines li[data-result="fail"] .icon { color: var(--express); }
+.customs-lines li[data-result="skip"] .icon { color: var(--ink-2); }
+.customs-name { font-weight: 600; }
+.customs-detail { color: var(--ink-2); overflow-wrap: anywhere; }
+.customs-detail code { color: var(--ink); }
+.customs-detail .changed { color: var(--express); }
+
+.customs-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding-block: 0.7rem;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+/* a button that reads as a link, as »Auf GitHub ansehen« in the delivery note */
+.text-button {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
+}
+.text-button:hover { text-decoration-thickness: 2px; }
+
+@media (width < 640px) {
+  .customs-lines li { grid-template-columns: 1rem minmax(0, 1fr); row-gap: 0.15rem; }
+  .customs-detail { grid-column: 2; }
+}
+
+/* the sender before and after, in the dialog */
+.sender-compare {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.35rem 0.8rem;
+  margin: 0 0 1rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px dashed var(--cut);
+  border-radius: var(--radius);
+  font-size: var(--step--1);
+}
+.sender-compare dt {
+  color: var(--ink-2);
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+.sender-compare dd { margin: 0; overflow-wrap: anywhere; }
+.sender-compare code { font-size: 1em; }
+.sender-compare .team { color: var(--ink-2); }
+.sender-compare [data-changed] { color: var(--express); font-weight: 600; }
+#confirm-sender #sender-note { color: var(--ink); }
+#confirm-sender .dialog-actions { flex-wrap: wrap; }

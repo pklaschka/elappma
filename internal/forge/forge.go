@@ -36,6 +36,9 @@ type Asset struct {
 	// private repositories); on Forgejo and Gitea it is the download link.
 	URL  string `json:"url"`
 	Size int64  `json:"size"`
+	// Digest is "sha256:…" as GitHub lists it for assets uploaded since
+	// mid-2025; empty on older assets and on Forgejo and Gitea.
+	Digest string `json:"digest"`
 }
 
 // Repo names a repository: Host is "" for GitHub, else the Forgejo or Gitea

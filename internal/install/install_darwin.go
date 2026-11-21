@@ -23,14 +23,51 @@ type mac struct{ o Options }
 
 // Install does what the original install-macos.sh did: take the .app out of the
 // DMG or ZIP, quit the running copy, replace the old one and clear the
-// quarantine flag so macOS opens the unsigned app.
-func (m *mac) Install(ctx context.Context, file, assetName string) (Result, error) {
+// quarantine flag so macOS opens the unsigned app. inspect runs between
+// unpacking and quitting, so a package it refuses leaves everything as it was.
+func (m *mac) Install(ctx context.Context, file, assetName string, inspect Inspect) (Result, error) {
 	u, err := unpack(ctx, file, assetName)
 	if err != nil {
 		return Result{}, err
 	}
 	defer u.close()
+	if inspect != nil {
+		if err := inspect(ctx, Unpacked{Path: u.source, Name: u.name, Identity: identify(ctx, u.source)}); err != nil {
+			return Result{}, err
+		}
+	}
 	return m.place(ctx, u)
+}
+
+func (m *mac) Identity(ctx context.Context, path string) Identity {
+	if path == "" || !exists(path) {
+		return Identity{}
+	}
+	return identify(ctx, path)
+}
+
+// identify reads the bundle ID with plutil and the team with codesign. The
+// team only counts when codesign confirms that a certificate from Apple's
+// chain for that team signed the bundle: otherwise it is just a string that
+// anyone can write into a signature.
+func identify(ctx context.Context, app string) Identity {
+	var id Identity
+	out, err := exec.CommandContext(ctx, "plutil", "-extract", "CFBundleIdentifier", "raw",
+		filepath.Join(app, "Contents", "Info.plist")).Output()
+	if err == nil {
+		id.BundleID = strings.TrimSpace(string(out))
+	}
+	// codesign -d prints to stderr, also when it fails
+	info, _ := exec.CommandContext(ctx, "codesign", "-dv", "--verbose=2", app).CombinedOutput()
+	team := parseTeamID(string(info))
+	if team == "" {
+		return id
+	}
+	req := fmt.Sprintf(`=anchor apple generic and certificate leaf[subject.OU] = "%s"`, team)
+	if exec.CommandContext(ctx, "codesign", "--verify", "--strict", "-R"+req, app).Run() == nil {
+		id.TeamID = team
+	}
+	return id
 }
 
 // unpacked is an app taken out of its download, not yet in place.

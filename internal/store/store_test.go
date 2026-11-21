@@ -19,15 +19,34 @@ type fakeInstaller struct {
 	installed map[string]string // asset name -> file contents
 	foreign   map[string]string // app name -> version installed without Lieferling
 	opened    []string          // paths passed to Open
+	// identity is what the next package contains; installedIdentity is
+	// what the copy at a path says.
+	identity          install.Identity
+	installedIdentity map[string]install.Identity
+	placed            int
 }
 
-func (f *fakeInstaller) Install(_ context.Context, file, asset string) (install.Result, error) {
+func (f *fakeInstaller) Install(ctx context.Context, file, asset string, inspect install.Inspect) (install.Result, error) {
 	data, err := os.ReadFile(file)
 	if err != nil {
 		return install.Result{}, err
 	}
+	if inspect != nil {
+		if err := inspect(ctx, install.Unpacked{Path: "/tmp/Demo.app", Name: "Demo", Identity: f.identity}); err != nil {
+			return install.Result{}, err
+		}
+	}
 	f.installed[asset] = string(data)
+	f.placed++
+	if f.installedIdentity == nil {
+		f.installedIdentity = map[string]install.Identity{}
+	}
+	f.installedIdentity["/Applications/Demo.app"] = f.identity
 	return install.Result{Path: "/Applications/Demo.app", AppName: "Demo"}, nil
+}
+
+func (f *fakeInstaller) Identity(_ context.Context, path string) install.Identity {
+	return f.installedIdentity[path]
 }
 
 func (f *fakeInstaller) Uninstall(context.Context, string) error { return nil }
@@ -46,6 +65,13 @@ func (f *fakeInstaller) InstalledVersion(name string) (string, string) {
 
 func newTestStore(t *testing.T, releases map[string][]forge.Release) (*Store, *fakeInstaller) {
 	t.Helper()
+	return newTestStoreWith(t, releases, nil)
+}
+
+// newTestStoreWith serves downloads[name] for an asset when set, else
+// "contents of <name>". Tests may change downloads between calls.
+func newTestStoreWith(t *testing.T, releases map[string][]forge.Release, downloads map[string]string) (*Store, *fakeInstaller) {
+	t.Helper()
 	var srv *httptest.Server
 	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if strings.HasPrefix(r.URL.Path, "/download/") {
@@ -53,7 +79,12 @@ func newTestStore(t *testing.T, releases map[string][]forge.Release) (*Store, *f
 				http.Error(w, "wrong accept", 400)
 				return
 			}
-			w.Write([]byte("contents of " + strings.TrimPrefix(r.URL.Path, "/download/")))
+			name := strings.TrimPrefix(r.URL.Path, "/download/")
+			if d, ok := downloads[name]; ok {
+				w.Write([]byte(d))
+				return
+			}
+			w.Write([]byte("contents of " + name))
 			return
 		}
 		repo := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/repos/"), "/releases")
