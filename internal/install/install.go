@@ -18,7 +18,12 @@ var ErrUnsupported = errors.New("installing is not supported on this system yet"
 type Installer interface {
 	// Install installs the downloaded file (its original name is assetName,
 	// which tells the format) and returns where the app now is and its name.
-	Install(ctx context.Context, file, assetName string) (Result, error)
+	// inspect, when not nil, runs after unpacking and before anything is
+	// quit or replaced; its error stops the install.
+	Install(ctx context.Context, file, assetName string, inspect Inspect) (Result, error)
+	// Identity reads the identity of the app installed at path; the zero
+	// value when there is none or it cannot be read.
+	Identity(ctx context.Context, path string) Identity
 	// Uninstall removes an app installed at path.
 	Uninstall(ctx context.Context, path string) error
 	// InstalledVersion reads the version of an app called name that is

@@ -10,6 +10,7 @@ import (
 	"github.com/pklaschka/lieferling/internal/forge"
 	"github.com/pklaschka/lieferling/internal/pick"
 	"github.com/pklaschka/lieferling/internal/state"
+	"github.com/pklaschka/lieferling/internal/verify"
 )
 
 // Status is what the list shows for one app.
@@ -35,6 +36,9 @@ type Status struct {
 	Error               string `json:"error"`
 	// Self marks the copy of Lieferling that is running; the app sets it.
 	Self bool `json:"self"`
+	// Customs is the customs note to show: the report of a held package of
+	// the newest version, else the report of the installed copy, else nil.
+	Customs *verify.Report `json:"customs"`
 }
 
 // List returns the status of every app, asking the forges for all at once.
@@ -64,6 +68,12 @@ func (s *Store) List(ctx context.Context) ([]Status, error) {
 }
 
 func (s *Store) status(ctx context.Context, a config.App, st state.State) Status {
+	out := s.statusOf(ctx, a, st)
+	out.Customs = customs(a, st, out)
+	return out
+}
+
+func (s *Store) statusOf(ctx context.Context, a config.App, st state.State) Status {
 	out := Status{Repo: a.Repo, Name: a.AppName, Channel: a.Channel}
 	if out.Channel == "" {
 		out.Channel = pick.Stable

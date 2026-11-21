@@ -10,9 +10,11 @@ func New(Options) Installer { return unsupported{} }
 
 type unsupported struct{}
 
-func (unsupported) Install(context.Context, string, string) (Result, error) {
+func (unsupported) Install(context.Context, string, string, Inspect) (Result, error) {
 	return Result{}, ErrUnsupported
 }
+
+func (unsupported) Identity(context.Context, string) Identity { return Identity{} }
 
 func (unsupported) Uninstall(context.Context, string) error { return ErrUnsupported }
 
