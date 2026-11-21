@@ -128,9 +128,6 @@
           <span class="customs-summary"></span>
         </summary>
         <ul class="customs-checks"></ul>
-        <p class="customs-actions" hidden>
-          <button type="button" class="button" data-customs="review">Absender ansehen …</button>
-        </p>
       </details>
     </li>
   </template>
@@ -173,13 +170,13 @@
   <dialog id="confirm-sender" aria-labelledby="sender-title" aria-describedby="sender-note">
     <form method="dialog">
       <h2 id="sender-title"></h2>
-      <p id="sender-note">Die neue Version ist anders gekennzeichnet als die bisherige. Das kommt vor, wenn die Entwickler:in anfängt zu signieren, das Zertifikat wechselt oder die App umbenennt. Es kommt auch vor, wenn jemand anderes das Paket gebaut hat. Lieferling kann das nicht unterscheiden.</p>
       <dl class="sender-compare">
         <dt>Bisher</dt>
         <dd data-sender="before"><code class="bundle"></code> <span class="team"></span></dd>
         <dt>Jetzt</dt>
         <dd data-sender="after"><code class="bundle"></code> <span class="team"></span></dd>
       </dl>
+      <p id="sender-note">Das passiert, wenn die App neu signiert oder umbenannt wurde, oder wenn jemand anderes das Paket gebaut hat. Lieferling kann das nicht unterscheiden.</p>
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Nicht installieren</button>
         <button value="accept" class="button danger">Annehmen und installieren</button>

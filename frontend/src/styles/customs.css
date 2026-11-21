@@ -1,15 +1,19 @@
 /* the customs note under a parcel (features/customs.ts): one printed line,
    unfolding to what was checked. Colour only says that something stopped
    the package; passing lines stay in ink, the delivered green belongs to
-   the tracking strip. */
+   the tracking strip. The note starts where the name does; the chevron
+   hangs in the stamp column. */
 .customs {
+  padding-inline-start: calc(var(--stamp) + 0.75rem);
   color: var(--ink-2);
   font-size: var(--step--1);
 }
 .customs summary {
+  position: relative;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 0.4rem;
+  min-block-size: 1.5rem;
   inline-size: fit-content;
   max-inline-size: 100%;
   list-style: none;
@@ -19,10 +23,10 @@
 .customs summary:where(:not([aria-disabled="true"])) { cursor: pointer; }
 .customs summary:where(:not([aria-disabled="true"])):hover .customs-summary { color: var(--ink); }
 
-/* the chevron sits right before the label and points down when open */
+/* the chevron points down when open */
 .customs .chevron {
-  flex: none;
-  align-self: center;
+  position: absolute;
+  inset-inline-start: -1.4rem;
   rotate: -90deg;
 }
 .customs[open] .chevron { rotate: 0deg; }
@@ -38,6 +42,7 @@
   font-stretch: 75%;
   font-weight: 600;
   letter-spacing: 0.05em;
+  line-height: 1;
   text-transform: uppercase;
 }
 .customs-label::after { content: " ·"; }
@@ -45,8 +50,8 @@
 .customs-checks {
   display: grid;
   gap: 0.25rem;
-  margin: 0.4rem 0 0;
-  padding: 0 0 0 1.4rem;
+  margin: 0.3rem 0 0;
+  padding: 0;
   list-style: none;
 }
 .customs-checks li {
@@ -60,14 +65,14 @@
 .customs-checks li[data-result="skip"] { color: var(--ink-2); }
 .customs-text { overflow-wrap: anywhere; }
 
-.customs-actions { margin: 0.5rem 0 0; padding-inline-start: 1.4rem; }
+/* the failing line keeps ink text; only its alert is red */
+li[data-result="fail"] .icon { color: var(--express); }
 
-/* stopped: always open, so no chevron; the line and what failed in red */
+/* stopped: always open, an alert instead of the chevron, the line in red */
 .customs:is([data-verdict="held"], [data-verdict="ask"], [data-verdict="disputed"]) {
-  .chevron { visibility: hidden; }
+  .chevron { rotate: 0deg; color: var(--express); }
   .customs-summary,
-  .customs-label,
-  li[data-result="fail"] { color: var(--express); }
+  .customs-label { color: var(--express); }
   .customs-summary { font-weight: 600; }
 }
 
@@ -76,7 +81,7 @@
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 0.35rem 0.8rem;
-  margin: 0;
+  margin: 0 0 1rem;
   padding: 0.55rem 0.7rem;
   border: 1px dashed var(--cut);
   border-radius: var(--radius);
@@ -95,5 +100,6 @@
 .sender-compare dd { margin: 0; overflow-wrap: anywhere; }
 .sender-compare code { font-size: 1em; }
 .sender-compare .team { color: var(--ink-2); }
-.sender-compare [data-sender="after"] { color: var(--express); }
-.sender-compare [data-sender="after"] .team { color: inherit; }
+.sender-compare [data-changed] { color: var(--express); font-weight: 600; }
+#confirm-sender #sender-note { color: var(--ink); }
+#confirm-sender .dialog-actions { flex-wrap: wrap; }
