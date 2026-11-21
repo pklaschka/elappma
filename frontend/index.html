@@ -16,6 +16,7 @@
     <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></symbol>
     <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.5 14 13H2zM8 6.5v3M8 11.5h.01"/></symbol>
     <symbol id="i-chevron" viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></symbol>
+    <symbol id="i-dash" viewBox="0 0 16 16"><path d="M4.5 8h7"/></symbol>
   </svg>
 
   <header class="bar">
@@ -120,6 +121,24 @@
         <svg class="icon" aria-hidden="true"><use href="#i-alert"/></svg>
         <span></span>
       </p>
+      <details class="customs" data-section="customs" hidden>
+        <summary>
+          <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
+          <span class="customs-label">Zoll</span>
+          <span class="customs-summary"></span>
+        </summary>
+        <ul class="customs-checks"></ul>
+        <p class="customs-actions" hidden>
+          <button type="button" class="button" data-customs="review">Absender ansehen …</button>
+        </p>
+      </details>
+    </li>
+  </template>
+
+  <template id="customs-check">
+    <li>
+      <svg class="icon" aria-hidden="true"><use/></svg>
+      <span class="customs-text"><span class="visually-hidden"></span></span>
     </li>
   </template>
 
@@ -147,6 +166,23 @@
       <div class="dialog-actions">
         <button value="cancel" class="button" autofocus>Behalten</button>
         <button value="remove" class="button danger">Entfernen</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="confirm-sender" aria-labelledby="sender-title" aria-describedby="sender-note">
+    <form method="dialog">
+      <h2 id="sender-title"></h2>
+      <p id="sender-note">Die neue Version ist anders gekennzeichnet als die bisherige. Das kommt vor, wenn die Entwickler:in anfängt zu signieren, das Zertifikat wechselt oder die App umbenennt. Es kommt auch vor, wenn jemand anderes das Paket gebaut hat. Lieferling kann das nicht unterscheiden.</p>
+      <dl class="sender-compare">
+        <dt>Bisher</dt>
+        <dd data-sender="before"><code class="bundle"></code> <span class="team"></span></dd>
+        <dt>Jetzt</dt>
+        <dd data-sender="after"><code class="bundle"></code> <span class="team"></span></dd>
+      </dl>
+      <div class="dialog-actions">
+        <button value="cancel" class="button" autofocus>Nicht installieren</button>
+        <button value="accept" class="button danger">Annehmen und installieren</button>
       </div>
     </form>
   </dialog>

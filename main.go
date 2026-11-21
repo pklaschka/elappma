@@ -141,6 +141,7 @@ func main() {
 	})
 
 	checker := &updateChecker{svc: svc, notifier: notifier}
+	svc.notify = checker.notify
 	tray := app.SystemTray.New()
 	if runtime.GOOS == "darwin" {
 		tray.SetTemplateIcon(trayIcon)
