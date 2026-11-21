@@ -1,6 +1,9 @@
 package forge
 
-import "testing"
+import (
+	"encoding/json"
+	"testing"
+)
 
 func TestParseRepo(t *testing.T) {
 	for in, want := range map[string]Repo{
@@ -48,5 +51,26 @@ func TestWebURL(t *testing.T) {
 func TestTokenVariable(t *testing.T) {
 	if got := TokenVariable("git.example.com:3000"); got != "LIEFERLING_TOKEN_GIT_EXAMPLE_COM_3000" {
 		t.Error(got)
+	}
+}
+
+func TestAssetDigest(t *testing.T) {
+	var rels []Release
+	data := `[{"tag_name":"v1","assets":[{"name":"a.dmg","digest":"sha256:abc"},{"name":"b.dmg","digest":null}]}]`
+	if err := json.Unmarshal([]byte(data), &rels); err != nil {
+		t.Fatal(err)
+	}
+	if got := rels[0].Assets[0].Digest; got != "sha256:abc" {
+		t.Errorf("digest = %q", got)
+	}
+	if got := rels[0].Assets[1].Digest; got != "" {
+		t.Errorf("null digest = %q", got)
+	}
+	var g giteaRelease
+	if err := json.Unmarshal([]byte(`{"tag_name":"v1","assets":[{"name":"a.dmg","browser_download_url":"x"}]}`), &g); err != nil {
+		t.Fatal(err)
+	}
+	if got := g.release().Assets[0].Digest; got != "" {
+		t.Errorf("gitea digest = %q", got)
 	}
 }

@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/pklaschka/lieferling/internal/config"
+	"github.com/pklaschka/lieferling/internal/verify"
 )
 
 // Installed is one app installed by Lieferling.
@@ -20,11 +21,18 @@ type Installed struct {
 	Asset       string    `json:"asset"`
 	Path        string    `json:"path"`
 	InstalledAt time.Time `json:"installedAt"`
+	// Customs is the report of the check this copy passed; nil for copies
+	// installed before the check existed.
+	Customs *verify.Report `json:"customs,omitempty"`
 }
 
 // State maps a repository (lowercase owner/name) to its installation.
 type State struct {
 	Apps map[string]Installed `json:"apps"`
+	// Held maps a repository to the report of a package that was not
+	// installed (verdict held or ask). It is replaced by the next attempt and
+	// removed by a successful install.
+	Held map[string]verify.Report `json:"held,omitempty"`
 }
 
 // DefaultPath is LIEFERLING_STATE if set, else Lieferling/state.json in the user's
@@ -66,8 +74,29 @@ func (s *State) Set(repo string, in Installed) {
 	s.Apps[key(repo)] = in
 }
 
-// Delete forgets an installation.
-func (s *State) Delete(repo string) { delete(s.Apps, key(repo)) }
+// Delete forgets an installation and any package held for it.
+func (s *State) Delete(repo string) {
+	delete(s.Apps, key(repo))
+	s.Release(repo)
+}
+
+// Hold records the report of a package that was not installed. The text is
+// not stored; it is filled again on the way out.
+func (s *State) Hold(repo string, r verify.Report) {
+	if s.Held == nil {
+		s.Held = map[string]verify.Report{}
+	}
+	s.Held[key(repo)] = r.Stored()
+}
+
+// HeldFor returns the report of the package held for repo.
+func (s *State) HeldFor(repo string) (verify.Report, bool) {
+	r, ok := s.Held[key(repo)]
+	return r, ok
+}
+
+// Release forgets the package held for repo.
+func (s *State) Release(repo string) { delete(s.Held, key(repo)) }
 
 // Load reads the state; a missing file is an empty state.
 func Load(path string) (State, error) {

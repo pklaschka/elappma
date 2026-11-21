@@ -13,6 +13,8 @@ import (
 	"runtime"
 	"sort"
 	"strings"
+
+	"github.com/pklaschka/lieferling/internal/verify"
 )
 
 // App is one repository in the list.
@@ -22,6 +24,17 @@ type App struct {
 	// AppName is the bundle name learned at the first install (such as
 	// "Feldspur"), so other computers can find a copy installed without Lieferling.
 	AppName string `json:"appName,omitempty"`
+	// Verify is this app's exception from Config.Verify: "", "standard",
+	// "strict" or "off".
+	Verify string `json:"verify,omitempty"`
+	// BundleID and TeamID are the sender of the last package installed on any
+	// computer. TeamID is "" for unsigned apps.
+	BundleID string `json:"bundleId,omitempty"`
+	TeamID   string `json:"teamId,omitempty"`
+	// Digests maps "version/assetName" to "sha256:…" for the last few
+	// versions, so every computer compares with what another one saw. A value
+	// with two digests separated by a space means the computers disagree.
+	Digests map[string]string `json:"digests,omitempty"`
 }
 
 // Config is the shared configuration file.
@@ -30,6 +43,9 @@ type Config struct {
 	Apps    []App `json:"apps"`
 	// CheckIntervalHours is how often the app looks for updates (default 6).
 	CheckIntervalHours int `json:"checkIntervalHours,omitempty"`
+	// Verify is the customs policy for all apps: "" or "standard", or
+	// "strict" (see package verify).
+	Verify string `json:"verify,omitempty"`
 }
 
 // Find returns the app for repo (case-insensitive) or nil.
@@ -94,13 +110,38 @@ func Load(path string) (Config, error) {
 		if err != nil {
 			continue
 		}
-		for _, a := range other.Apps {
-			if cfg.Find(a.Repo) == nil {
-				cfg.Apps = append(cfg.Apps, a)
-			}
-		}
+		merge(&cfg, other)
 	}
 	return cfg, nil
+}
+
+// merge folds a conflict copy into dst. Apps only in the copy are added. For
+// apps in both, the main file wins, except: digests are unioned (two
+// different digests for one key are kept together, which marks the version
+// as contested), an empty sender is filled from the copy as a pair, and the
+// stricter policy wins.
+func merge(dst *Config, other Config) {
+	dst.Verify = verify.Stricter(dst.Verify, other.Verify)
+	for _, o := range other.Apps {
+		a := dst.Find(o.Repo)
+		if a == nil {
+			dst.Apps = append(dst.Apps, o)
+			continue
+		}
+		if a.AppName == "" {
+			a.AppName = o.AppName
+		}
+		if a.BundleID == "" && a.TeamID == "" {
+			a.BundleID, a.TeamID = o.BundleID, o.TeamID
+		}
+		a.Verify = verify.Stricter(a.Verify, o.Verify)
+		for k, v := range o.Digests {
+			if a.Digests == nil {
+				a.Digests = map[string]string{}
+			}
+			a.Digests[k] = verify.Merge(a.Digests[k], v)
+		}
+	}
 }
 
 // Update reads the newest file, lets fn change it, and writes it back. Any
