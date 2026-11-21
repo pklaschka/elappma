@@ -16,7 +16,6 @@
     <symbol id="i-check" viewBox="0 0 16 16"><path d="m3.5 8.5 3 3 6-7"/></symbol>
     <symbol id="i-alert" viewBox="0 0 16 16"><path d="M8 2.5 14 13H2zM8 6.5v3M8 11.5h.01"/></symbol>
     <symbol id="i-chevron" viewBox="0 0 16 16"><path d="m4.5 6.5 3.5 3.5 3.5-3.5"/></symbol>
-    <symbol id="i-dash" viewBox="0 0 16 16"><path d="M4.5 8h7"/></symbol>
   </svg>
 
   <header class="bar">
@@ -123,19 +122,27 @@
       </p>
       <details class="customs" data-section="customs" hidden>
         <summary>
-          <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
           <span class="customs-label">Zoll</span>
           <span class="customs-summary"></span>
+          <span class="customs-tag"></span>
+          <svg class="icon chevron" aria-hidden="true"><use href="#i-chevron"/></svg>
         </summary>
-        <ul class="customs-checks"></ul>
+        <div class="customs-box">
+          <ul class="customs-lines"></ul>
+          <p class="customs-foot" hidden>
+            <span class="customs-hint"></span>
+            <button type="button" class="text-button" data-customs="accept">Trotzdem installieren …</button>
+          </p>
+        </div>
       </details>
     </li>
   </template>
 
-  <template id="customs-check">
+  <template id="customs-line">
     <li>
       <svg class="icon" aria-hidden="true"><use/></svg>
-      <span class="customs-text"><span class="visually-hidden"></span></span>
+      <span class="customs-name"><span class="visually-hidden"></span></span>
+      <span class="customs-detail"></span>
     </li>
   </template>
 

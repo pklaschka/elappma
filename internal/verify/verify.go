@@ -158,6 +158,8 @@ type Report struct {
 	Checks    []Check   `json:"checks"`
 	Before    *Sender   `json:"before,omitempty"` // set when the sender was compared and differs
 	After     *Sender   `json:"after,omitempty"`
+	// Sender is who the package says it comes from, when it could be read.
+	Sender *Sender `json:"sender,omitempty"`
 	CheckedAt time.Time `json:"checkedAt"`
 	Summary   string    `json:"summary"` // the collapsed line, filled by Localize, never stored
 }

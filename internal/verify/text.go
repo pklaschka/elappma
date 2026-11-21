@@ -29,9 +29,9 @@ func (p phrase) in(lang Lang) string {
 var summaries = map[Verdict]phrase{
 	Cleared:   {"checked and cleared", "Geprüft und freigegeben"},
 	Unchecked: {"let through, there was nothing to compare with", "Durchgelassen, es gab nichts zu vergleichen"},
-	Ask:       {"{version} held: the sender changed", "{version} angehalten: Der Absender hat sich geändert"},
-	Held:      {"{version} held and not installed", "{version} angehalten und nicht installiert"},
-	Disputed:  {"disputed: another Mac saw a different package for this version", "Widerspruch: Ein anderer Mac hat für diese Version ein anderes Paket gesehen"},
+	Ask:       {"{version} held: the sender changed", "Angehalten, nichts wurde installiert"},
+	Held:      {"{version} held and not installed", "Angehalten, nichts wurde installiert"},
+	Disputed:  {"disputed: another Mac saw a different package for this version", "Widerspruch zwischen deinen Macs"},
 	Exempt:    {"not checked, switched off for this app", "Nicht geprüft, für diese App abgeschaltet"},
 }
 

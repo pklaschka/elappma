@@ -1,79 +1,113 @@
-/* the customs note under a parcel (features/customs.ts): one printed line,
-   unfolding to what was checked. Colour only says that something stopped
-   the package; passing lines stay in ink, the delivered green belongs to
-   the tracking strip. The note starts where the name does; the chevron
-   hangs in the stamp column. */
-.customs {
-  padding-inline-start: calc(var(--stamp) + 0.75rem);
-  color: var(--ink-2);
-  font-size: var(--step--1);
-}
+/* the customs note under a parcel (features/customs.ts), drawn like the
+   delivery note: a printed line »ZOLL«, the verdict and a tag, unfolding
+   to a box with one line per check. Red only where something stopped the
+   package; a tag in delivered green when every line matched. */
 .customs summary {
-  position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 0.4rem;
-  min-block-size: 1.5rem;
+  gap: 0.35rem 0.75rem;
   inline-size: fit-content;
   max-inline-size: 100%;
+  min-block-size: 1.5rem;
   list-style: none;
-  border-radius: 3px;
+  color: var(--ink-2);
 }
 .customs summary::-webkit-details-marker { display: none; }
 .customs summary:where(:not([aria-disabled="true"])) { cursor: pointer; }
 .customs summary:where(:not([aria-disabled="true"])):hover .customs-summary { color: var(--ink); }
 
-/* the chevron points down when open */
-.customs .chevron {
-  position: absolute;
-  inset-inline-start: -1.4rem;
-  rotate: -90deg;
+/* the field-label voice, set in ink like LIEFERSCHEIN */
+.customs-label {
+  color: var(--ink);
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1;
+  text-transform: uppercase;
 }
-.customs[open] .chevron { rotate: 0deg; }
+
+/* the tag: a stamped box like »Vorab« */
+.customs-tag {
+  padding: 0 0.35rem;
+  border: 1px solid currentColor;
+  border-radius: 3px;
+  font-family: var(--display);
+  font-size: 0.6875rem;
+  font-stretch: 75%;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.5;
+  text-transform: uppercase;
+}
+.customs-tag[data-tone="done"] { color: var(--delivered); }
+.customs-tag[data-tone="part"] { color: var(--ink-2); }
+.customs-tag[data-tone="stop"] { color: var(--express); }
+
+/* the chevron after the tag points up while open */
+.customs .chevron { color: var(--ink-2); }
+.customs[open] .chevron { rotate: 180deg; }
+.customs summary[aria-disabled="true"] .chevron { display: none; }
 @media (prefers-reduced-motion: no-preference) {
   .customs .chevron { transition: rotate 0.2s var(--ease); }
 }
 
-/* the field-label voice of the route stops */
-.customs-label {
-  flex: none;
-  font-family: var(--display);
-  font-size: 0.6875rem;
-  font-stretch: 75%;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  line-height: 1;
-  text-transform: uppercase;
+.customs-box {
+  margin-block-start: 0.6rem;
+  padding: 0 1rem;
+  border: 1px solid var(--cut);
+  border-radius: var(--radius);
+  background: var(--well);
 }
-.customs-label::after { content: " ·"; }
-
-.customs-checks {
+.customs-lines { margin: 0; padding: 0; list-style: none; }
+.customs-lines li {
   display: grid;
-  gap: 0.25rem;
-  margin: 0.3rem 0 0;
+  grid-template-columns: 1rem minmax(7rem, 10rem) minmax(0, 1fr);
+  gap: 0.75rem;
+  align-items: baseline;
+  padding-block: 0.7rem;
+}
+.customs-lines li + li,
+.customs-foot { border-block-start: 1px dashed var(--cut); }
+.customs-lines .icon { align-self: start; margin-block-start: 0.2em; }
+.customs-lines li[data-result="pass"] .icon { color: var(--delivered); }
+.customs-lines li[data-result="fail"] .icon { color: var(--express); }
+.customs-lines li[data-result="skip"] .icon { color: var(--ink-2); }
+.customs-name { font-weight: 600; }
+.customs-detail { color: var(--ink-2); overflow-wrap: anywhere; }
+.customs-detail code { color: var(--ink); }
+.customs-detail .changed { color: var(--express); }
+
+.customs-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.4rem 1rem;
+  margin: 0;
+  padding-block: 0.7rem;
+  color: var(--ink-2);
+  font-size: var(--step--1);
+}
+
+/* a button that reads as a link, as »Auf GitHub ansehen« in the delivery note */
+.text-button {
   padding: 0;
-  list-style: none;
-}
-.customs-checks li {
-  display: grid;
-  grid-template-columns: 1em minmax(0, 1fr);
-  gap: 0.45rem;
-  align-items: start;
+  border: 0;
+  background: none;
   color: var(--ink);
+  font: inherit;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  cursor: pointer;
 }
-.customs-checks .icon { margin-block-start: 0.15em; }
-.customs-checks li[data-result="skip"] { color: var(--ink-2); }
-.customs-text { overflow-wrap: anywhere; }
+.text-button:hover { text-decoration-thickness: 2px; }
 
-/* the failing line keeps ink text; only its alert is red */
-li[data-result="fail"] .icon { color: var(--express); }
-
-/* stopped: always open, an alert instead of the chevron, the line in red */
-.customs:is([data-verdict="held"], [data-verdict="ask"], [data-verdict="disputed"]) {
-  .chevron { rotate: 0deg; color: var(--express); }
-  .customs-summary,
-  .customs-label { color: var(--express); }
-  .customs-summary { font-weight: 600; }
+@media (width < 640px) {
+  .customs-lines li { grid-template-columns: 1rem minmax(0, 1fr); row-gap: 0.15rem; }
+  .customs-detail { grid-column: 2; }
 }
 
 /* the sender before and after, in the dialog */

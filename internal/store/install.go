@@ -146,6 +146,9 @@ func (s *Store) installRelease(ctx context.Context, app config.App, rel forge.Re
 	var now verify.Sender
 	res, err := s.Installer.Install(ctx, file, asset.Name, func(ctx context.Context, u install.Unpacked) error {
 		now = verify.Sender{BundleID: u.Identity.BundleID, TeamID: u.Identity.TeamID}
+		if now.BundleID != "" {
+			rep.Sender = &now
+		}
 		known := s.knownSender(ctx, app, st)
 		ok := accepted != nil && accepted.After != nil && accepted.After.Equal(now)
 		rep.Checks = append(rep.Checks, verify.SenderCheck(known, now, ok))

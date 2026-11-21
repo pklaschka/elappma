@@ -196,7 +196,7 @@ func TestSenderString(t *testing.T) {
 	if r.Checks[0].Text != want {
 		t.Errorf("German sender line = %q, want %q", r.Checks[0].Text, want)
 	}
-	if r.Summary != "1.0 angehalten: Der Absender hat sich geändert" {
+	if r.Summary != "Angehalten, nichts wurde installiert" {
 		t.Errorf("summary = %q", r.Summary)
 	}
 }
